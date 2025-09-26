@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 在其他script标签之前添加 -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
   
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
@@ -381,8 +384,6 @@
       border-radius: 6px;
       padding: 1rem;
       margin-top: 1rem;
-      max-height: 600px;
-      overflow-y: auto;
     }
     
     .analysis-results pre {
@@ -391,35 +392,6 @@
       line-height: 1.4;
       white-space: pre-wrap;
       word-wrap: break-word;
-    }
-
-    /* Visualization results styling */
-    .visualization-results {
-      max-height: 600px;
-      overflow-y: auto;
-    }
-
-    .visualization-results img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 10px;
-    }
-
-    .ranking-results {
-      background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 6px;
-      padding: 10px;
-      margin-top: 10px;
-    }
-
-    .ranking-results pre {
-      color: #2c3e50;
-      margin: 0;
-      font-size: 0.85rem;
-      line-height: 1.4;
     }
     
     /* Modal */
@@ -540,7 +512,7 @@
     }
 
     .collapsible.expanded .collapsible-uns {
-      max-height: 500px;
+      max-height: 900px;
       overflow-y: auto;
     }
     
@@ -575,21 +547,6 @@
     .param-input input {
       width: 120px;
       flex-shrink: 0;
-    }
-
-    .right-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .panel {
-      display: none;
-    }
-
-    .panel.active {
-      display: block;
     }
     
     /* Responsive design */
@@ -633,14 +590,6 @@
       .hero h1 {
         margin-bottom: 0;
       }
-    }
-
-    .truncate-text {
-      max-width: 100%;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 20ch;
     }
     </style>
   <!-- Google tag (gtag.js) -->
@@ -756,23 +705,15 @@
           <h2 class="title is-3">Abstract</h2><br>
           <div class="content has-text-justified">
             <p>
-              Recent <strong>Large Language Models (LLMs)</strong> have made remarkable progress, but they still struggle with <em>complex reasoning tasks</em> such as logical deduction and planning, as they primarily rely on token-level probability relationships, limiting their reasoning capabilities.
-              
-              In this paper, inspired by <em>cognitive science</em> and <em>neurosymbolic AI</em>, we introduce <strong>Structured Reasoning</strong>, which aims at enhancing the reasoning capabilities of LLMs from the structure level.
-              
-              Specifically, we first collect high‑frequency, domain‑agnostic <strong>reasoning tags</strong> and construct a <strong>structured reasoning dataset</strong> with those tags. Then, we propose two structure-aware algorithms: 
-              
-              1) <strong>MAX-Flow</strong>, which constructs <em>sparse reasoning graphs</em> by analyzing step-to-step attention matrices and measures the quality of the graph based on each step's contribution to the final answer, and 
-              
-              2) <strong>LCS (Longest Common Sequence)</strong>, which improves reasoning quality by identifying optimal common subsequences across multiple generated responses and leveraging these consistent steps as reliable reasoning paths.
-              
-              Experiments with <strong>DeepSeek-R1-Distill-Qwen-1.5B</strong> and <strong>7B</strong> models show that our method consistently outperforms <em>GRPO</em> and other carefully tuned baselines across various context lengths (0.5k‑8k).
-              
-              <strong>Structured Reasoning</strong> shows particular strength in:
-              • <em>efficiency</em> (better performance at shorter lengths)
-              • <em>stability</em> (consistent high-quality outputs across temperature ranges 0.1-1.0)
-              
-              Moreover, as evidenced by the <strong>IISR (Interference Injection and Selective Removal)</strong> analysis, the proposed MAX-Flow algorithm, which is based on step attention matrices, provides a significantly more accurate understanding of reasoning step dependencies compared to perplexity, thereby enhancing the interpretability of the reasoning process.
+              Recent Large Language Models (LLMs) have made remarkable progress, but they still struggle with complex reasoning tasks such as logical deduction and planning. This is partly because they rely primarily on token-level probability relationships, which limits their ability to reason effectively. 
+              In this paper, inspired by cognitive science and neurosymbolic AI, we introduce <strong>Structured Reasoning</strong>, which aimes at enhancing the reasoning capabilities of LLMs from the step level. 
+              To this end, we first collect high‑frequency, domain‑agnostic reasoning step tags and  construct a structured reasoning dataset with those tags. 
+              Then, we treat a reasoning process as a <strong>directed graph</strong>, where the vertices represent steps and the edges indicate the direction of reasoning. 
+              In this context, an efficient reasoning process corresponds to, or can be characterized by, a sparse reasoning graph.  
+              1) To construct such a graph, we propose MAX-Flow, which maximizes step-to-step attention flow while minimizing the number of edges. The quality of a sparse reasoning graph can be reflected by the total flow from all steps to the final answer.
+              2) To improve the graph, we propse LCS (Longest Common Sequence), which selects reliable reasoning paths by identifying optimal common subsequences (consecutive steps) shared across multiple generated responses (sequences).  
+              Experiments with DeepSeek-R1-Distill-Qwen-1.5B and 7B models show that our method  consistently outperforms GRPO and other carefully tuned baselines across various context lengths (0.5k–8k).
+              Structured Reasoning shows particular strength in efficiency (better performance with fewer steps) and stability (consistently generating high-quality outputs across a temperature range of 0.1 to 1.0).  
             </p>
           </div>
         </div>
@@ -795,11 +736,11 @@
     </div>
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
-        <div style="margin-bottom: 1.5rem;">
+        <div style="margin-bottom: 1.5rem;">  <!-- 添加了这个div来包裹图片并提供下方间距 -->
           <img id="rep" src="static/images/method/pipeline.png" style="width: 100%; max-width: 1000px; max-height:600px;">
         </div>
         <div class="content has-text-justified">
-          Illustration of our three-stage pipeline for enhancing LLMs with Structured Reasoning. (1) Data Collection: Extract structured reasoning labels from unstructured LLM responses, producing outputs with explicit Question, Verify, and Answer components. (2) Step Dependency Computation: Compute step-to-step attention matrices to reveal reasoning dependencies across model layers. (3) Structure-Awared Opitmization: Apply Max-Flow algorithm for providing a significantly more accurate understanding of reasoning step dependencies compared to perplexity and LCS algorithm for improveing reasoning quality by identifying optimal common subsequences across multiple generated responses and leveraging these consistent steps as reliable reasoning paths.
+          Illustration of our three-stage pipeline for enhancing LLMs with Structured Reasoning. (1) Data Collection: Extract structured reasoning labels from unstructured LLM responses, producing outputs with explicit Question, Verify, and Answer components. (2) Step Dependency Computation: Compute step-to-step attention matrices to reveal step dependencies and construct directed graph. (3) Structure-Awared Opitmization: Apply Max-Flow algorithm for providing a significantly more accurate understanding of reasoning step dependencies compared to perplexity and LCS algorithm for improveing reasoning quality by identifying optimal common subsequences across multiple generated responses and leveraging these consistent steps as reliable reasoning paths.
         </div>
       </div>
     </div>
@@ -861,7 +802,7 @@
           <!-- Stability Tab -->
           <div class="tab-pane" data-content="2">
             <div class="content has-text-justified">
-              We observe contrasting behaviors between baseline and structured reasoning models across temperature variations. Baseline DeepSeek-R1-Distill models exhibit significant temperature sensitivity, with performance improving substantially as temperature increases from 0.1 to 0.9. For example, the 1.5B baseline shows accuracy gains from 77.47 to 82.33 on MATH500 when temperature rises. This suggests that baseline models rely heavily on sampling diversity to achieve better performance. In contrast, our MaxFlow method maintains consistent performance across all temperature settings, achieving the lowest variance: ±0.56 on MATH500 and ±0.18 on OlympiadBench for the 1.5B model. This temperature robustness indicates that structured reasoning frameworks produce inherently stable outputs without requiring specific sampling parameters, making them more reliable.
+              We observe contrasting behaviors between baseline and structured reasoning models across temperature variations. Baseline DeepSeek-R1-Distill models exhibit significant temperature sensitivity, with performance improving substantially as temperature increases from 0.1 to 0.9. For example, the 1.5B baseline shows accuracy gains from 77.47 to 82.33 on MATH500 when temperature rises. This suggests that baseline models rely heavily on sampling diversity to achieve better performance. In contrast, our MaxFlow method maintains consistent performance across all temperature settings, achieving the lowest variance: ±0.53 on MATH500 and ±0.29 on OlympiadBench for the 1.5B model. This temperature robustness indicates that structured reasoning frameworks produce inherently stable outputs without requiring specific sampling parameters, making them more reliable.
             </div>
             <div style="display: flex; justify-content: center; margin-top: 25px;">
               <img id="data3" src="static/images/method/teaser_b.png" width="75%" />
@@ -940,7 +881,7 @@
               <img id="data2" src="static/images/method/transformer_attention_smooth_gradient.png" width="48%" />
             </div>
             <div class="content has-text-justified">
-              According to 70 samples from 1.5B and 7B models with our step attention matrix thresholded at 0.1, we found that layer 0 attends to an average of 6.82 reasoning steps, while layer 1 attends to only 1.41. This produces a repeating broad-versus-local alternation through approximately layers 0~13, suggesting an early division of labor between (i) layers that aggregate multi-step context and (ii) layers that perform local refinement anchored to the immediately preceding step. Beginning around layer 14, all subsequent layers attend to >8 steps (peaking at 12.06), marking a transition to a stable broad-span integration regime that more faithfully ranks step importance. The same qualitative pattern appears in both 1.5B and 7B models: early oscillatory specialization → mid/late sustained global integration. The 7B model shows a smoother (less jagged) broadening trajectory, whereas the 1.5B model preserves sharper alternating contrasts before converging. These consistent cross-scale dynamics imply (1) the broad-span mid—late blocks encode globally consolidating reasoning signals, and (2) pruning or distillation strategies could target redundant narrow-focus early layers or alternating pairs while preserving (or selectively enhancing) the globally integrative mid—late region.
+              According to 70 samples from 1.5B and 7B models with our step attention matrix thresholded at 0.1, we found that layer 0 attends to an average of 6.82 reasoning steps, while layer 1 attends to only 1.41. This produces a repeating broad-versus-local alternation through approximately layers 0~13, suggesting an early division of labor between (i) layers that aggregate multi-step context and (ii) layers that perform local refinement anchored to the immediately preceding step. Beginning around layer 14, all subsequent layers attend to >8 steps (peaking at 12.06), marking a transition to a stable broad-span integration regime that more faithfully ranks step importance. The same qualitative pattern appears in both 1.5B and 7B models: early oscillatory specialization → mid/late sustained global integration. The 7B model shows a smoother (less jagged) broadening trajectory, whereas the 1.5B model preserves sharper alternating contrasts before converging. These consistent cross-scale dynamics imply (1) the broad-span mid–late blocks encode globally consolidating reasoning signals, and (2) pruning or distillation strategies could target redundant narrow-focus early layers or alternating pairs while preserving (or selectively enhancing) the globally integrative mid–late region.
             </div>
         </div>
       </div>
@@ -1052,7 +993,7 @@
                   <span id="right-title">Analysis Tools</span>
                 </h3>
                 <button onclick="toggleRightPanel()" class="button is-middium" id="toggle-button">
-                  Compare with other
+                  Compare with free-form GRPO →
                 </button>
               </div>
               
@@ -1087,6 +1028,23 @@
             </div>
           </div>
 
+          <style>
+            .right-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 1rem;
+            }
+
+            .panel {
+              display: none;
+            }
+
+            .panel.active {
+              display: block;
+            }
+          </style>
+
           <script>
             function toggleRightPanel() {
               const analysisPanel = document.getElementById('analysis-panel');
@@ -1098,7 +1056,7 @@
                 // 切换到非结构化推理
                 analysisPanel.classList.remove('active');
                 unstructuredPanel.classList.add('active');
-                rightTitle.textContent = 'Unstructured Reasoning';
+                rightTitle.textContent = 'Free-Form Reasoning';
                 toggleButton.textContent = 'Analyse';
                 // 重置分析工具状态
                 document.getElementById('analysis-params').classList.add('hidden');
@@ -1108,10 +1066,14 @@
                 unstructuredPanel.classList.remove('active');
                 analysisPanel.classList.add('active');
                 rightTitle.textContent = 'Analysis Tools';
-                toggleButton.textContent = 'Compare with other';
+                toggleButton.textContent = 'Compare with free-form GRPO →';
               }
             }
           </script>
+
+
+
+
 
       <script>
         let currentState = {
@@ -1141,18 +1103,8 @@
             document.getElementById('unstructured-content').innerHTML = '<div class="loading">Initializing Python environment...</div>';
             
             let pyodide = await loadPyodide();
-            await pyodide.loadPackage(['numpy', 'networkx', 'matplotlib']);
+            await pyodide.loadPackage(['numpy', 'networkx']);
             window.pyodide = pyodide;
-            
-            // Configure matplotlib for inline display
-            await pyodide.runPythonAsync(`
-              import matplotlib
-              matplotlib.use('Agg')  # Use non-interactive backend
-              import matplotlib.pyplot as plt
-              import io
-              import base64
-            `);
-            
             console.log('✅ Pyodide initialized');
             
             // Clear loading indicators
@@ -1232,6 +1184,7 @@
             }
         }
 
+
         // Update display
         function updateDisplay() {
           // Ensure data exists
@@ -1262,7 +1215,7 @@
             <div class="step-box">
               <strong>Token Usage:</strong><br>
               ${problem.tokens === 1 ? 
-                '<span style="color: #e74c3c;">Out of Maximum Length</span>' : 
+                '<span style="color: #e74c3c;"> > 8192: Out of Maximum Length</span>' : 
                 problem.tokens}
             </div>
             <div id="steps">
@@ -1274,23 +1227,20 @@
           function parseAndDisplaySteps(problem) {
             if (!problem.reasoning) return '';
             
-            // Parse tags and content from reasoning text
             const pattern = /<(\w+)>(.*?)(?=<\w+>|$)/gs;
             const matches = [...problem.reasoning.matchAll(pattern)];
             
-            // Match parsing results with step information - all steps are now collapsible
             return problem.step_attention_steps.map(step => {
               const matchingStep = matches.find(match => match[1] === step.step_tag);
               let content = matchingStep ? matchingStep[2].trim() : '';
               
-              // If it's an ANSWER step, replace content with prediction result
               if (step.step_tag.toLowerCase() === 'answer') {
                 content = problem.prediction;
               }
               
-              // All steps are now collapsible
+              
               return `
-                <div class="collapsible" onclick="toggleCollapsible(this)">
+                <div class="collapsible expanded" onclick="toggleCollapsible(this)">
                   <div class="collapsible-header">
                     <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
                     <span class="collapsible-toggle">▼</span>
@@ -1303,10 +1253,11 @@
             }).join('');
           }
 
+
           // Display unstructured content with collapsible reasoning
           if (unstructured) {
             const reasoningContent = unstructured.reasoning ? 
-              `<div class="collapsible" onclick="toggleCollapsible(this)">
+              `<div class="collapsible expanded" onclick="toggleCollapsible(this)">
                 <div class="collapsible-header">
                   <strong>Reasoning Process</strong>
                   <span class="collapsible-toggle">▼</span>
@@ -1331,28 +1282,47 @@
                 <br>
                 <div class="truncate-text">${unstructured.prediction}</div>
               </div>
+              <style>
+              .truncate-text {
+                max-width: 100%;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 20ch;  /* 限制大约20个字符的宽度 */
+              }
+            </style>
               <div class="step-box">
                 <strong>Token Usage:</strong><br>
                 ${unstructured.tokens === 1 ? 
-                  '<span style="color: #e74c3c;">Out of Maximum Length</span>' : 
+                  '<span style="color: #e74c3c;"> > 8192: Out of Maximum Length</span>' : 
                   unstructured.tokens}
               </div>
               ${reasoningContent}
             `;
           } else {
             document.getElementById('unstructured-content').innerHTML = `
-              <div class="step-box">No matching unstructured reasoning found</div>
+              <div class="step-box">No matching free-form reasoning found</div>
             `;
           }
-          
           // Update progress bar
           updateProgress();
         }
 
-        // Find matching unstructured reasoning
+        // Find matching free-form reasoning
         function findMatchingProblem(problemText) {
-          return currentState.unstructuredData.find(item => item.problem === problemText);
+          // 找到所有匹配的问题
+          const matches = currentState.unstructuredData.filter(item => item.problem === problemText);
+          
+          // 如果没有匹配项，返回null
+          if (matches.length === 0) {
+            return null;
+          }
+          
+          // 从匹配项中随机选择一个
+          const randomIndex = Math.floor(Math.random() * matches.length);
+          return matches[randomIndex];
         }
+
 
         // Toggle collapsible sections
         function toggleCollapsible(element) {
@@ -1369,7 +1339,7 @@
           document.getElementById('progress-text').textContent = `${current}/${total}`;
         }
 
-        // Analysis functions
+// Analysis functions
 async function showMaxFlowAnalysis() {
   // 更新输入区域，移除Run Analysis按钮，添加实时更新
   document.getElementById('analysis-params').innerHTML = `
@@ -1399,161 +1369,261 @@ async function runMaxFlowAnalysis() {
             ...problem.step_attention_steps
         ];
         
-        const result = await pyodide.runPythonAsync(`
-            import networkx as nx
-            import numpy as np
-            import matplotlib.pyplot as plt
-            import io
-            import base64
-            
-            def create_visualizations(matrix, steps):
-                # 创建一个并排的图表布局
-                fig = plt.figure(figsize=(16, 6))
-                
-                # 热力图
-                ax1 = plt.subplot(121)
-                im = ax1.imshow(matrix, cmap='Blues')  # 使用蓝色调色板
-                
-                # 添加标签
-                step_labels = [step['step_tag'] for step in steps]
-                ax1.set_xticks(range(len(step_labels)))
-                ax1.set_yticks(range(len(step_labels)))
-                ax1.set_xticklabels(step_labels, rotation=45, ha='right', fontsize=8)
-                ax1.set_yticklabels(step_labels, fontsize=8)
-                
-                # 添加颜色条
-                plt.colorbar(im, ax=ax1, label='Attention Weight')
-                ax1.set_title('Step Attention Matrix', color='#2c3e50', pad=20)
-                
-                # 注意力流图
-                ax2 = plt.subplot(122)
-                G = nx.DiGraph()
-                
-                # 添加节点
-                for i, step in enumerate(steps):
-                    G.add_node(i, label=step['step_tag'])
-                
-                # 添加边
-                for i in range(len(matrix)):
-                    for j in range(len(matrix)):
-                        if matrix[i][j] > 0:
-                            G.add_edge(i, j, weight=matrix[i][j])
-                
-                pos = nx.spring_layout(G, k=1, iterations=50)
-                
-                # 绘制节点
-                nx.draw_networkx_nodes(G, pos, 
-                                     node_color='#3498db',  # 使用蓝色
-                                     node_size=800,
-                                     alpha=0.7,
-                                     ax=ax2)
-                
-                # 绘制边
-                edges = G.edges()
-                if edges:
-                    weights = [G[u][v]['weight'] * 3 for u, v in edges]
-                    nx.draw_networkx_edges(G, pos, 
-                                         width=weights,
-                                         edge_color='#2980b9',  # 深蓝色边
-                                         alpha=0.6,
-                                         arrowsize=15,
-                                         ax=ax2)
-                
-                # 添加标签
-                labels = {i: step['step_tag'][:4] for i, step in enumerate(steps)}  # 缩短标签
-                nx.draw_networkx_labels(G, pos, labels, font_size=7, ax=ax2)
-                
-                ax2.set_title('Attention Flow Graph', color='#2c3e50', pad=20)
-                ax2.axis('off')
-                
-                # 调整布局
-                plt.tight_layout(pad=2.0)
-                
-                # 保存为base64字符串
-                buffer = io.BytesIO()
-                plt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
-                buffer.seek(0)
-                
-                image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-                plt.close()
-                
-                return image_base64
+const raw = await pyodide.runPythonAsync(`
+import networkx as nx
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import io
+import base64
+import json
+import traceback
+import math
 
-            def select_steps_by_max_flow(step_attention_matrix, remove_n=0):
-                n_steps = len(step_attention_matrix)
-                G = nx.DiGraph()
-                
-                for i in range(n_steps-1):
-                    G.add_node(i)
-                
-                for i in range(n_steps-1):
-                    for j in range(n_steps-1):
-                        if step_attention_matrix[i][j] > 0:
-                            G.add_edge(i, j, capacity=step_attention_matrix[i][j])
-                
-                node_importance = {}
-                source = 0
-                target = n_steps-2
-                
+def fig_to_base64(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', bbox_inches='tight', dpi=90)
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+    buf.close()
+    return img_base64
+
+def safe_float(x):
+    try:
+        v = float(x)
+        if math.isfinite(v):
+            return v
+        return None
+    except Exception:
+        return None
+
+def create_visualizations(matrix, steps, kept_nodes):
+    # 收敛：确保 kept_nodes 合法、去重、排序，并限制在范围内
+    n_steps = len(steps)
+    kept_nodes = sorted({int(i) for i in kept_nodes if isinstance(i, (int, np.integer)) and 0 <= int(i) < n_steps})
+
+    fig = plt.figure(figsize=(16, 6))
+
+    # 左：完整热力图（保持你原来的对比视角）
+    ax1 = plt.subplot(121)
+    try:
+        im = ax1.imshow(matrix, cmap='Blues')
+    except Exception:
+        # 回退：如果 matrix 不是规整二维，尝试用 object -> float 转换生成二维数组
+        m = np.array(matrix, dtype=object)
+        rows = len(m)
+        cols = len(m[0]) if rows>0 and hasattr(m[0], '__len__') else rows
+        arr = np.zeros((rows, cols), dtype=float)
+        for i in range(rows):
+            for j in range(cols):
+                arr[i,j] = safe_float(m[i][j]) or 0.0
+        im = ax1.imshow(arr, cmap='Blues')
+
+    step_labels = [step['step_tag'] for step in steps]
+    ax1.set_xticks(range(len(step_labels)))
+    ax1.set_yticks(range(len(step_labels)))
+    ax1.set_xticklabels(step_labels, rotation=45, ha='right')
+    ax1.set_yticklabels(step_labels)
+    plt.colorbar(im, ax=ax1, label='Attention Weight')
+    ax1.set_title('Step Attention Matrix (Full)', color='#2c3e50', pad=12)
+
+    # 右：仅保留节点的子图
+    ax2 = plt.subplot(122)
+    if len(kept_nodes) == 0:
+        ax2.text(0.5, 0.5, 'No nodes to display', ha='center', va='center')
+        ax2.axis('off')
+        plt.tight_layout(pad=2.0)
+        img_base64 = fig_to_base64(fig)
+        plt.close(fig)
+        return img_base64
+
+    G = nx.DiGraph()
+    idx_map = {orig: k for k, orig in enumerate(kept_nodes)}
+
+    # 添加节点
+    for orig in kept_nodes:
+        tag = steps[orig]['step_tag'] if 0 <= orig < len(steps) else f'node_{orig}'
+        G.add_node(idx_map[orig], label=tag, orig=orig)
+
+    # 添加边：只在 kept_nodes 间
+    # 将 matrix 安全地当作二维索引结构访问
+    try:
+        n = len(matrix)
+        for i in kept_nodes:
+            row = matrix[i]
+            for j in kept_nodes:
                 try:
-                    original_max_flow = nx.maximum_flow_value(G, source, target)
-                except:
-                    original_max_flow = 0
-                
-                for node in range(0, n_steps-1):
-                    G_temp = G.copy()
-                    G_temp.remove_node(node)
-                    
-                    try:
-                        new_max_flow = nx.maximum_flow_value(G_temp, source, target)
-                        node_importance[node] = original_max_flow - new_max_flow
-                    except:
-                        node_importance[node] = original_max_flow
-                
-                importance_values = list(node_importance.values())
-                max_importance = max(importance_values[1:-1]) if len(importance_values) > 2 else 1
-                
-                if max_importance != 0:
-                    for node in node_importance:
-                        node_importance[node] = node_importance[node] / max_importance
-                
-                sorted_nodes = sorted(node_importance.items(), key=lambda x: x[1])
-                nodes_to_remove = [node for node, _ in sorted_nodes[:remove_n]]
-                kept_nodes = [i for i in range(n_steps-1) if i not in nodes_to_remove]
-                sorted_nodes = sorted(sorted_nodes, key=lambda x: x[1], reverse=True)
-                
-                return kept_nodes, sorted_nodes
+                    w = safe_float(row[j])
+                except Exception:
+                    w = safe_float(matrix[i][j])
+                if w is not None and w > 0:
+                    G.add_edge(idx_map[i], idx_map[j], weight=w)
+    except Exception:
+        # 回退：将 matrix 转为对象数组再读
+        m = np.array(matrix, dtype=object)
+        for i in kept_nodes:
+            for j in kept_nodes:
+                w = safe_float(m[i][j])
+                if w is not None and w > 0:
+                    G.add_edge(idx_map[i], idx_map[j], weight=w)
 
-            # 运行分析
-            matrix = np.array(${JSON.stringify(problem.step_attention_matrix)})
-            steps = ${JSON.stringify(steps)}
-            
-            # 创建可视化并获取base64图像
-            image_base64 = create_visualizations(matrix, steps)
-            
-            # 运行max flow分析
-            kept_nodes, sorted_nodes = select_steps_by_max_flow(matrix, ${removeN})
-            kept_steps = [steps[i]['step_tag'] for i in kept_nodes]
-            importance_list = [f"{steps[node]['step_tag']}: {importance:.3f}" for node, importance in sorted_nodes]
-            
-            # 返回结果和图像
-            result = {
-                'image': image_base64,
-                'ranking': "\\n".join(importance_list)
-            }
-            result
-        `);
-        
-        // 更新分析结果区域
+    # 固定随机种子，限制迭代避免卡住
+    pos = nx.spring_layout(G, seed=42, k=None, iterations=50)
+
+    nx.draw_networkx_nodes(G, pos, node_color='#3498db', node_size=900, alpha=0.8, ax=ax2)
+    edges = G.edges()
+    weights = [max(0.5, G[u][v]['weight'] * 2) for u, v in edges] if len(G.edges) > 0 else []
+    if weights:
+        nx.draw_networkx_edges(G, pos, width=weights, edge_color='#2980b9', alpha=0.6, arrowsize=18, ax=ax2)
+
+    labels = nx.get_node_attributes(G, 'label')
+    nx.draw_networkx_labels(G, pos, labels, font_size=8, ax=ax2)
+
+    ax2.set_title('Attention Flow Graph (Kept Steps Only)', color='#2c3e50', pad=12)
+    ax2.axis('off')
+
+    plt.tight_layout(pad=2.0)
+    img_base64 = fig_to_base64(fig)
+    plt.close(fig)
+    return img_base64
+
+def select_steps_by_max_flow(step_attention_matrix, remove_n=0):
+    try:
+        n_steps = len(step_attention_matrix)
+    except Exception:
+        n_steps = 0
+
+    if n_steps <= 2:
+        kept_nodes = list(range(max(0, n_steps-1)))
+        sorted_nodes = [(i, 0.0) for i in kept_nodes]
+        return kept_nodes, sorted_nodes
+
+    # 将矩阵尽量转为 float 权重；失败则以 0 处理
+    m = np.array(step_attention_matrix, dtype=object)
+    size = len(m)
+    G = nx.DiGraph()
+    for i in range(size-1):
+        G.add_node(i)
+
+    for i in range(size-1):
+        for j in range(size-1):
+            w = safe_float(m[i][j])
+            if w is not None and w > 0:
+                G.add_edge(i, j, capacity=w)
+
+    source = 0
+    target = size - 2
+    try:
+        original_max_flow = nx.maximum_flow_value(G, source, target)
+    except Exception:
+        original_max_flow = 0.0
+
+    node_importance = {}
+    for node in range(0, size-1):
+        G_temp = G.copy()
+        if node in G_temp:
+            G_temp.remove_node(node)
+        try:
+            new_max_flow = nx.maximum_flow_value(G_temp, source, target)
+            node_importance[node] = float(original_max_flow - new_max_flow)
+        except Exception:
+            node_importance[node] = float(original_max_flow)
+
+    # 归一化（避免除0）
+    interior_idx = [i for i in range(1, size-2)] if size-2 > 1 else []
+    denom = max([node_importance[i] for i in interior_idx], default=1.0)
+    denom = max(denom, 1e-12)
+    for node in node_importance:
+        node_importance[node] = node_importance[node] / denom
+
+    sorted_nodes = sorted(node_importance.items(), key=lambda x: x[1])
+    total_nodes = max(0, size-1)
+    safe_remove_n = int(min(max(remove_n, 0), total_nodes))
+    nodes_to_remove = [node for node, _ in sorted_nodes[:safe_remove_n]]
+    kept_nodes = [i for i in range(size-1) if i not in nodes_to_remove]
+    sorted_nodes_desc = [(i, node_importance.get(i, 0.0)) for i in range(size-1)]
+    return kept_nodes, sorted_nodes_desc
+
+def main():
+    try:
+        matrix = ${JSON.stringify(problem.step_attention_matrix)}
+        steps = ${JSON.stringify(steps)}
+        removeN = int(${Number.isFinite(removeN) ? removeN : 0})
+
+        # 保持原始矩阵，但在需要时转为 object 访问
+        try:
+            mat_np = np.array(matrix, dtype=float)
+            if mat_np.ndim != 2:
+                mat_np = np.array(matrix, dtype=object)
+        except Exception:
+            mat_np = np.array(matrix, dtype=object)
+
+        kept_nodes, sorted_nodes = select_steps_by_max_flow(mat_np, removeN)
+        # 再次裁剪，避免越界
+        kept_nodes = [i for i in kept_nodes if 0 <= int(i) < len(steps)]
+        kept_steps = [steps[i]['step_tag'] for i in kept_nodes]
+
+        image_base64 = create_visualizations(mat_np, steps, kept_nodes)
+
+        importance_list = []
+        for node, importance in sorted_nodes:
+            tag = steps[node]['step_tag'] if 0 <= node < len(steps) else f"node_{node}"
+            importance_list.append(f"{tag}: {importance:.3f}")
+
+        result = {
+            "image": image_base64,
+            "ranking": "Node importance:\\n" + "\\n".join(importance_list),
+            "kept_steps": kept_steps
+        }
+        return json.dumps(result)
+    except Exception as e:
+        err = {"error": str(e), "trace": traceback.format_exc()}
+        return json.dumps(err)
+
+main()
+`)
+
+
+      let resultData;
+      try {
+        if (typeof raw === 'string') {
+          resultData = JSON.parse(raw.trim());
+        } else {
+          // 少数情况下 pyodide 可能直接返回对象
+          resultData = raw;
+        }
+      } catch (e) {
+        console.error('JSON parse failed. Raw:', raw, e);
         document.getElementById('analysis-results').innerHTML = `
-            <div class="visualization-results">
-                <img src="data:image/png;base64,${result.image}" alt="Max-Flow Analysis Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
-                <div class="ranking-results">
-                    <strong>Node Importance Ranking:</strong>
-                    <pre>${result.ranking}</pre>
-                </div>
-            </div>
+          <div style="color:#c00; white-space:pre-wrap;">分析失败：返回结果不是有效的 JSON。
+      原始返回：
+      ${String(raw)}</div>
         `;
+        throw e;
+      }
+
+      // 如果 Python 端返回了错误信息，展示出来
+      if (resultData && resultData.error) {
+        document.getElementById('analysis-results').innerHTML = `
+          <div style="color:#c00; white-space:pre-wrap;">分析失败：
+      ${resultData.error}
+
+      ${resultData.trace || ''}</div>
+        `;
+      } else {
+        // 正常渲染
+        document.getElementById('analysis-results').innerHTML = `
+          <div class="visualization-results" style="margin-top: 10px; padding: 10px;">
+            <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
+            <img src="data:image/png;base64,${resultData.image}" alt="Max-Flow Analysis Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
+            <div class="ranking-results" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 10px;">
+              <pre style="color: #2c3e50; margin: 0;">${resultData.ranking}</pre>
+            </div>
+            ${Array.isArray(resultData.kept_steps) ? `<div style="margin-top:8px; color:#2c3e50;">Keep Steps: ${resultData.kept_steps.join(' , ')}</div>` : ''}
+          </div>
+        `;
+      }
         
     } catch (error) {
         console.error("Analysis failed:", error);
@@ -1564,6 +1634,8 @@ async function runMaxFlowAnalysis() {
         `;
     }
 }
+
+
 
         async function showTopKAnalysis() {
           document.getElementById('analysis-params').innerHTML = `
@@ -1843,6 +1915,57 @@ async function runMaxFlowAnalysis() {
     </div>
   </div>
 </section>
+<style>
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
 
-</body>
+  .modal:not(.hidden) {
+    display: flex;
+  }
+
+  .modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 6px;
+    max-width: 600px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .help-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .help-section h4 {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+  }
+
+  .help-section ul {
+    list-style: disc;
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .help-section li {
+    margin-bottom: 0.25rem;
+  }
+
+  .help-section p {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+  }
+</style>
+
 </html>
