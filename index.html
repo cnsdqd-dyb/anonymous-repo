@@ -668,10 +668,47 @@
                 </span>
 
                 <span class="link-block">
-                  <a href="#SRA"
-                     class="nav-link button-55 is-normal">
-                    <span>Structured Reasoning Analyzer</span>
-                    </a>
+<a href="#SRA"
+   class="nav-link button-55 is-normal"
+   style="
+     backdrop-filter: blur(6px);      /* 毛玻璃（需在半透明背景上）*/
+     -webkit-backdrop-filter: blur(6px);
+
+     /* 半透明炫彩渐变背景（静态基底） */
+     background: linear-gradient(
+       135deg,
+       rgba(255, 0, 150, 0.22),
+       rgba(0, 180, 255, 0.22),
+       rgba(0, 255, 170, 0.22),
+       rgba(255, 230, 0, 0.22)
+     );
+     background-size: 200% 200%;     /* 让背景可平滑移动 */
+     animation: glowShift 5s ease-in-out infinite;
+   "
+>
+  <span>Structured Reasoning Analyzer</span>
+</a>
+
+<style>
+/* 仅作用于你的这个链接元素（href=#SRA） */
+a[href="#SRA"] {
+  /* 使用与内联相同的动画名即可 */
+}
+
+/* 定义流光背景的关键帧动画 */
+@keyframes glowShift {
+  0%   { background-position: 0% 50%; filter: saturate(120%); }
+  50%  { background-position: 100% 50%; filter: saturate(150%); }
+  100% { background-position: 0% 50%; filter: saturate(120%); }
+}
+
+
+
+/* 提升文字可读性（轻描边/发光） */
+a[href="#SRA"] span {
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+}
+</style>
                 </span> 
                 
                 <span class="link-block">
@@ -932,8 +969,7 @@
         </div>
       </div>
 
-
-      <div class="container">
+            <div class="container">
         <!-- Data Loading Controls -->
         <div class="card">
           <h2 class="title is-4" style="margin-bottom: 3;">Data Configuration</h2>
@@ -948,18 +984,20 @@
             <div>
               <label>Benchmark Dataset:</label>
               <select id="benchmark">
-                <option value="olympiadbench">OlympiadBench</option>
+                <option value="drop">Drop</option>
                 <option value="lsat">LSAT</option>
                 <option value="math500">Math500</option>
-                <option value="drop">Drop</option>
+                <option value="olympiadbench">OlympiadBench</option>
               </select>
             </div>
+            <!-- 按钮可删掉
             <div style="display: flex; align-items: end;">
-              <button onclick="loadData()" class="button primary" style="width: 100%;">
-                Load Data (R)
-              </button>
+              <button onclick="loadData()" class="button primary" style="width: 100%;">Load Data (R)</button>
             </div>
+            -->
           </div>
+
+          
 
           <div class="progress-container">
             <button onclick="prevProblem()" class="button">
@@ -1000,7 +1038,7 @@
               <!-- 内容区域 -->
               <div id="right-content">
                 <!-- 分析工具面板 -->
-                <div id="analysis-panel" class="panel active">
+                <div id="analysis-panel" class="panel active" style="box-shadow:none;">
                   <div class="grid-3">
                     <button onclick="showMaxFlowAnalysis()" class="button success">
                       Max-Flow Analysis (M)
@@ -1016,10 +1054,11 @@
                     <!-- Dynamic parameter input area -->
                   </div>
                   <div id="analysis-results"></div>
+                  <div> <p>We show how the MaxFlow method treats the reasoning process as a directed graph, then analyzes and visualizes it. You can change how many reasoning steps are kept by tuning three methods that use the step attention matrix (from structured reasoning models with 14, 16, 19, and 23 layers): MaxFlow, TopP, and TopK. This lets you see, from an LLM’s point of view, which steps matter most for the final answer.</p> <p><strong>MaxFlow:</strong> Based on the “maximum flow – minimum cut” idea. It checks how much the attention flow to the answer drops when we remove each reasoning step. A bigger drop means the step is more important.</p> <p><strong>TopK:</strong> Start from the answer node and move backward. At each step, keep the K previous steps with the highest attention (greedy). Repeat until you reach the question.</p> <p><strong>TopP:</strong> Start from the answer and move backward. Sort previous steps by attention, then keep steps until their total probability reaches P. Repeat until you reach the question. This is similar to top‑p sampling in LLMs.</p> </div>
                 </div>
 
                 <!-- 非结构化推理面板 -->
-                <div id="unstructured-panel" class="panel">
+                <div id="unstructured-panel" class="panel" style="box-shadow:none;">
                   <div id="unstructured-content" style="padding-top: 1rem;">
                     <div class="loading">Initializing...</div>
                   </div>
@@ -1108,8 +1147,8 @@
             console.log('✅ Pyodide initialized');
             
             // Clear loading indicators
-            document.getElementById('structured-content').innerHTML = '<div class="step-box">Please load data to begin analysis</div>';
-            document.getElementById('unstructured-content').innerHTML = '<div class="step-box">Please load data to begin analysis</div>';
+            // document.getElementById('structured-content').innerHTML = '<div class="step-box">Please load data to begin analysis</div>';
+            // document.getElementById('unstructured-content').innerHTML = '<div class="step-box">Please load data to begin analysis</div>';
           } catch (error) {
             console.error('❌ Pyodide initialization failed:', error);
             document.getElementById('structured-content').innerHTML = `
@@ -1169,6 +1208,8 @@
                 // Update display
                 updateDisplay();
                 console.log("✅ Data loaded successfully");
+                await ensurePyodideReady();
+                showMaxFlowAnalysis();
             } catch (error) {
                 console.error("❌ Data loading failed:", error);
                 document.getElementById('structured-content').innerHTML = `
@@ -1184,7 +1225,40 @@
             }
         }
 
+        document.addEventListener('DOMContentLoaded', () => {
+          const modelSel = document.getElementById('model-size');
+          const benchSel = document.getElementById('benchmark');
 
+          const onChange = () => {
+            // 可选：避免多次快速触发，做个简单防抖
+            if (onChange._t) clearTimeout(onChange._t);
+            onChange._t = setTimeout(() => {
+              loadData();
+            }, 150);
+          };
+
+          modelSel.addEventListener('change', onChange);
+          benchSel.addEventListener('change', onChange);
+
+          // 页面首次加载时自动加载一次
+          loadData();
+        });
+
+        let pyReady = false;
+        let pyReadyPromise = null;
+
+        function ensurePyodideReady() {
+          if (pyReady) return Promise.resolve();
+          if (!pyReadyPromise) {
+            pyReadyPromise = initPyodide() // 你现有的加载函数
+              .then(() => { pyReady = true; })
+              .catch(e => {
+                pyReadyPromise = null;
+                throw e;
+              });
+          }
+          return pyReadyPromise;
+        }
         // Update display
         function updateDisplay() {
           // Ensure data exists
@@ -1617,9 +1691,6 @@ main()
           <div class="visualization-results" style="margin-top: 10px; padding: 10px;">
             <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
             <img src="data:image/png;base64,${resultData.image}" alt="Max-Flow Analysis Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
-            <div class="ranking-results" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 10px;">
-              <pre style="color: #2c3e50; margin: 0;">${resultData.ranking}</pre>
-            </div>
             ${Array.isArray(resultData.kept_steps) ? `<div style="margin-top:8px; color:#2c3e50;">Keep Steps: ${resultData.kept_steps.join(' , ')}</div>` : ''}
           </div>
         `;
@@ -1635,20 +1706,16 @@ main()
     }
 }
 
-
-
-        async function showTopKAnalysis() {
-          document.getElementById('analysis-params').innerHTML = `
-            <div class="param-input">
-              <label>K value:</label>
-              <input type="number" id="top-k" value="2" min="1">
-              <button onclick="runTopKAnalysis()" class="button warning">
-                Run Analysis
-              </button>
-            </div>
-          `;
-          document.getElementById('analysis-params').classList.remove('hidden');
-        }
+function showTopKAnalysis() {
+  document.getElementById('analysis-params').innerHTML = `
+    <div class="param-input">
+      <label>K value:</label>
+      <input type="number" id="top-k" value="2" min="1" oninput="runTopKAnalysis()">
+    </div>
+  `;
+  document.getElementById('analysis-params').classList.remove('hidden');
+  runTopKAnalysis();
+}
 
         async function runTopKAnalysis() {
           const k = parseInt(document.getElementById('top-k').value);
@@ -1667,61 +1734,194 @@ main()
                   ...problem.step_attention_steps
               ];
               
-              const result = await pyodide.runPythonAsync(`
-                  import numpy as np
+const raw = await pyodide.runPythonAsync(`
+import numpy as np
+import networkx as nx
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import io, base64, json, traceback, math
 
-                  def select_steps(step_attention_matrix, top_k):
-                      if top_k <= 0:
-                          raise ValueError("top_k must be greater than 0")
-                      
-                      n_steps = step_attention_matrix.shape[1]
-                      stack = [n_steps - 2]
-                      visited = set()
-                      
-                      selected_steps = []
-                      selected_attention = []
-                      
-                      while stack:
-                          current_step = stack.pop()
-                          
-                          if current_step in visited:
-                              continue
-                          
-                          visited.add(current_step)
-                          selected_steps.append(current_step)
-                          
-                          if current_step == 0:
-                              continue
-                          
-                          attention_scores = step_attention_matrix[1:current_step, current_step]
-                          actual_k = min(top_k, current_step)
-                          topk_indices = attention_scores.argsort()[-actual_k:][::-1]
-                          
-                          for idx in topk_indices:
-                              if idx+1 not in visited:
-                                  stack.append(idx+1)
-                                  selected_attention.append(attention_scores[idx])
-                      
-                      # Sort and add question node
-                      ordered_indices = np.argsort(selected_steps)
-                      selected_steps = [selected_steps[i] for i in ordered_indices]
-                      selected_steps.insert(0, 0)
-                      
-                      return selected_steps
+def fig_to_base64(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', bbox_inches='tight', dpi=90)
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+    buf.close()
+    return img_base64
 
-                  # Run analysis
-                  matrix = np.array(${JSON.stringify(problem.step_attention_matrix)})
-                  steps = ${JSON.stringify(steps)}
-                  selected = select_steps(matrix, ${k})
-                  selected_steps = [steps[i]['step_tag'] for i in selected]
-                  f"Selected steps:\\n" + "\\n".join(selected_steps)
-              `);
-              
-              document.getElementById('analysis-results').innerHTML = `
-                  <div class="analysis-results">
-                      <pre>${result}</pre>
-                  </div>
-              `;
+def safe_float(x):
+    try:
+        v = float(x)
+        if math.isfinite(v):
+            return v
+        return None
+    except Exception:
+        return None
+
+def create_visualizations(matrix, steps, kept_nodes):
+    n_steps = len(steps)
+    kept_nodes = sorted({int(i) for i in kept_nodes if 0 <= int(i) < n_steps})
+    fig = plt.figure(figsize=(16, 6))
+
+    ax1 = plt.subplot(121)
+    try:
+        im = ax1.imshow(matrix, cmap='Blues')
+    except Exception:
+        m = np.array(matrix, dtype=object)
+        rows = len(m)
+        cols = len(m[0]) if rows>0 and hasattr(m[0], '__len__') else rows
+        arr = np.zeros((rows, cols), dtype=float)
+        for i in range(rows):
+            for j in range(cols):
+                arr[i,j] = safe_float(m[i][j]) or 0.0
+        im = ax1.imshow(arr, cmap='Blues')
+
+    step_labels = [step['step_tag'] for step in steps]
+    ax1.set_xticks(range(len(step_labels)))
+    ax1.set_yticks(range(len(step_labels)))
+    ax1.set_xticklabels(step_labels, rotation=45, ha='right')
+    ax1.set_yticklabels(step_labels)
+    plt.colorbar(im, ax=ax1, label='Attention Weight')
+    ax1.set_title('Step Attention Matrix (Full)', color='#2c3e50', pad=12)
+
+    ax2 = plt.subplot(122)
+    if len(kept_nodes) == 0:
+        ax2.text(0.5, 0.5, 'No nodes to display', ha='center', va='center')
+        ax2.axis('off')
+        plt.tight_layout(pad=2.0)
+        img_base64 = fig_to_base64(fig)
+        plt.close(fig)
+        return img_base64
+
+    G = nx.DiGraph()
+    idx_map = {orig: k for k, orig in enumerate(kept_nodes)}
+    for orig in kept_nodes:
+        tag = steps[orig]['step_tag'] if 0 <= orig < len(steps) else f'node_{orig}'
+        G.add_node(idx_map[orig], label=tag, orig=orig)
+
+    try:
+        n = len(matrix)
+        for i in kept_nodes:
+            row = matrix[i]
+            for j in kept_nodes:
+                try:
+                    w = safe_float(row[j])
+                except Exception:
+                    w = safe_float(matrix[i][j])
+                if w is not None and w > 0:
+                    G.add_edge(idx_map[i], idx_map[j], weight=w)
+    except Exception:
+        m = np.array(matrix, dtype=object)
+        for i in kept_nodes:
+            for j in kept_nodes:
+                w = safe_float(m[i][j])
+                if w is not None and w > 0:
+                    G.add_edge(idx_map[i], idx_map[j], weight=w)
+
+    pos = nx.spring_layout(G, seed=42, iterations=50)
+    nx.draw_networkx_nodes(G, pos, node_color='#3498db', node_size=900, alpha=0.8, ax=ax2)
+    edges = G.edges()
+    weights = [max(0.5, G[u][v]['weight'] * 2) for u, v in edges] if len(G.edges) > 0 else []
+    if weights:
+        nx.draw_networkx_edges(G, pos, width=weights, edge_color='#2980b9', alpha=0.6, arrowsize=18, ax=ax2)
+    labels = nx.get_node_attributes(G, 'label')
+    nx.draw_networkx_labels(G, pos, labels, font_size=8, ax=ax2)
+    ax2.set_title('Attention Flow Graph (Kept Steps Only)', color='#2c3e50', pad=12)
+    ax2.axis('off')
+
+    plt.tight_layout(pad=2.0)
+    img_base64 = fig_to_base64(fig)
+    plt.close(fig)
+    return img_base64
+
+def select_steps_topk(step_attention_matrix, top_k):
+    if top_k <= 0:
+        raise ValueError("top_k must be greater than 0")
+    n_steps = step_attention_matrix.shape[1]
+    stack = [n_steps - 2]
+    visited = set()
+    selected_steps = []
+
+    while stack:
+        current_step = stack.pop()
+        if current_step in visited:
+            continue
+        visited.add(current_step)
+        selected_steps.append(current_step)
+        if current_step == 0:
+            continue
+
+        attention_scores = step_attention_matrix[1:current_step, current_step]
+        if attention_scores.size == 0:
+            continue
+        actual_k = min(top_k, attention_scores.shape[0])
+        topk_indices = attention_scores.argsort()[-actual_k:][::-1]
+        for idx in topk_indices:
+            if idx+1 not in visited:
+                stack.append(idx+1)
+
+    ordered_indices = np.argsort(selected_steps)
+    selected_steps = [selected_steps[i] for i in ordered_indices]
+    selected_steps.insert(0, 0)
+    return selected_steps
+
+def main():
+    try:
+        matrix = np.array(${JSON.stringify(problem.step_attention_matrix)})
+        steps = ${JSON.stringify(steps)}
+        k = int(${Number.isFinite(k) ? k : 1})
+
+        selected = select_steps_topk(matrix, k)
+        kept_nodes = [i for i in selected if 0 <= int(i) < len(steps)]
+        kept_steps = [steps[i]['step_tag'] for i in kept_nodes]
+
+        image_base64 = create_visualizations(matrix, steps, kept_nodes)
+
+        result = {
+            "image": image_base64,
+            "kept_steps": kept_steps
+        }
+        return json.dumps(result)
+    except Exception as e:
+        err = {"error": str(e), "trace": traceback.format_exc()}
+        return json.dumps(err)
+
+main()
+`)
+let resultData;
+try {
+  if (typeof raw === 'string') {
+    resultData = JSON.parse(raw.trim());
+  } else {
+    resultData = raw;
+  }
+} catch (e) {
+  console.error('JSON parse failed. Raw:', raw, e);
+  document.getElementById('analysis-results').innerHTML = `
+    <div style="color:#c00; white-space:pre-wrap;">分析失败：返回结果不是有效的 JSON。
+原始返回：
+${String(raw)}</div>
+  `;
+  throw e;
+}
+
+if (resultData && resultData.error) {
+  document.getElementById('analysis-results').innerHTML = `
+    <div style="color:#c00; white-space:pre-wrap;">分析失败：
+${resultData.error}
+
+${resultData.trace || ''}</div>
+  `;
+} else {
+  document.getElementById('analysis-results').innerHTML = `
+    <div class="visualization-results" style="margin-top: 10px; padding: 10px;">
+      <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
+      <img src="data:image/png;base64,${resultData.image}" alt="Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
+      ${Array.isArray(resultData.kept_steps) ? `<div style="margin-top:8px; color:#2c3e50;">Keep Steps：${resultData.kept_steps.join(' , ')}</div>` : ''}
+    </div>
+  `;
+}
           } catch (error) {
               console.error("Analysis failed:", error);
               document.getElementById('analysis-results').innerHTML = `
@@ -1732,18 +1932,16 @@ main()
           }
       }
 
-        async function showTopPAnalysis() {
-          document.getElementById('analysis-params').innerHTML = `
-            <div class="param-input">
-              <label>P value (0-1):</label>
-              <input type="number" id="top-p" value="0.9" min="0" max="1" step="0.1">
-              <button onclick="runTopPAnalysis()" class="button info">
-                Run Analysis
-              </button>
-            </div>
-          `;
-          document.getElementById('analysis-params').classList.remove('hidden');
-        }
+function showTopPAnalysis() {
+  document.getElementById('analysis-params').innerHTML = `
+    <div class="param-input">
+      <label>P value (0-1):</label>
+      <input type="number" id="top-p" value="0.9" min="0" max="1" step="0.1" oninput="runTopPAnalysis()">
+    </div>
+  `;
+  document.getElementById('analysis-params').classList.remove('hidden');
+  runTopPAnalysis();
+}
 
         async function runTopPAnalysis() {
             const p = parseFloat(document.getElementById('top-p').value);
@@ -1762,74 +1960,202 @@ main()
                     ...problem.step_attention_steps
                 ];
                 
-                const result = await pyodide.runPythonAsync(`
-                    import numpy as np
+const raw = await pyodide.runPythonAsync(`
+import numpy as np
+import networkx as nx
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import io, base64, json, traceback, math
 
-                    def select_steps(step_attention_matrix, top_p):
-                        if top_p <= 0:
-                            raise ValueError("top_p must be greater than 0")
-                        
-                        n_steps = step_attention_matrix.shape[1]
-                        stack = [n_steps - 2]
-                        visited = set()
-                        
-                        selected_steps = []
-                        selected_attention = []
-                        selected_probs = []
-                        
-                        while stack:
-                            current_step = stack.pop()
-                            
-                            if current_step in visited:
-                                continue
-                                
-                            visited.add(current_step)
-                            selected_steps.append(current_step)
-                            
-                            if current_step == 0:
-                                continue
-                                
-                            attention_scores = step_attention_matrix[1:current_step, current_step]
-                            sorted_indices = attention_scores.argsort()[::-1]
-                            sorted_scores = attention_scores[sorted_indices]
-                            
-                            if sorted_scores.sum() > 0:
-                                normalized_scores = sorted_scores / sorted_scores.sum()
-                            else:
-                                normalized_scores = np.ones_like(sorted_scores) / len(sorted_scores)
-                                
-                            cumulative_probs = np.cumsum(normalized_scores)
-                            topp_indices = sorted_indices[cumulative_probs <= top_p]
-                            
-                            if len(topp_indices) == 0 and len(sorted_indices) > 0:
-                                topp_indices = np.array([sorted_indices[0]])
-                                
-                            for idx in topp_indices:
-                                if idx+1 not in visited:
-                                    stack.append(idx+1)
-                                    selected_attention.append(attention_scores[idx])
-                                    selected_probs.append(normalized_scores[np.where(sorted_indices == idx)[0][0]])
-                        
-                        # Sort and add question node
-                        ordered_indices = np.argsort(selected_steps)
-                        selected_steps = [selected_steps[i] for i in ordered_indices]
-                        selected_steps.insert(0, 0)
-                        
-                        return selected_steps
+def fig_to_base64(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', bbox_inches='tight', dpi=90)
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+    buf.close()
+    return img_base64
 
-                    # Run analysis
-                    matrix = np.array(${JSON.stringify(problem.step_attention_matrix)})
-                    steps = ${JSON.stringify(steps)}
-                    selected = select_steps(matrix, ${p})
-                    selected_steps = [steps[i]['step_tag'] for i in selected]
-                    f"Selected steps:\\n" + "\\n".join(selected_steps)
-                `);
-                
-                document.getElementById('analysis-results').innerHTML = `
-                    <div class="analysis-results">
-                        <pre>${result}</pre>
-                    </div>
-                `;
+def safe_float(x):
+    try:
+        v = float(x)
+        if math.isfinite(v):
+            return v
+        return None
+    except Exception:
+        return None
+
+def create_visualizations(matrix, steps, kept_nodes):
+    n_steps = len(steps)
+    kept_nodes = sorted({int(i) for i in kept_nodes if 0 <= int(i) < n_steps})
+    fig = plt.figure(figsize=(16, 6))
+
+    ax1 = plt.subplot(121)
+    try:
+        im = ax1.imshow(matrix, cmap='Blues')
+    except Exception:
+        m = np.array(matrix, dtype=object)
+        rows = len(m)
+        cols = len(m[0]) if rows>0 and hasattr(m[0], '__len__') else rows
+        arr = np.zeros((rows, cols), dtype=float)
+        for i in range(rows):
+            for j in range(cols):
+                arr[i,j] = safe_float(m[i][j]) or 0.0
+        im = ax1.imshow(arr, cmap='Blues')
+
+    step_labels = [step['step_tag'] for step in steps]
+    ax1.set_xticks(range(len(step_labels)))
+    ax1.set_yticks(range(len(step_labels)))
+    ax1.set_xticklabels(step_labels, rotation=45, ha='right')
+    ax1.set_yticklabels(step_labels)
+    plt.colorbar(im, ax=ax1, label='Attention Weight')
+    ax1.set_title('Step Attention Matrix (Full)', color='#2c3e50', pad=12)
+
+    ax2 = plt.subplot(122)
+    if len(kept_nodes) == 0:
+        ax2.text(0.5, 0.5, 'No nodes to display', ha='center', va='center')
+        ax2.axis('off')
+        plt.tight_layout(pad=2.0)
+        img_base64 = fig_to_base64(fig)
+        plt.close(fig)
+        return img_base64
+
+    G = nx.DiGraph()
+    idx_map = {orig: k for k, orig in enumerate(kept_nodes)}
+    for orig in kept_nodes:
+        tag = steps[orig]['step_tag'] if 0 <= orig < len(steps) else f'node_{orig}'
+        G.add_node(idx_map[orig], label=tag, orig=orig)
+
+    try:
+        n = len(matrix)
+        for i in kept_nodes:
+            row = matrix[i]
+            for j in kept_nodes:
+                try:
+                    w = safe_float(row[j])
+                except Exception:
+                    w = safe_float(matrix[i][j])
+                if w is not None and w > 0:
+                    G.add_edge(idx_map[i], idx_map[j], weight=w)
+    except Exception:
+        m = np.array(matrix, dtype=object)
+        for i in kept_nodes:
+            for j in kept_nodes:
+                w = safe_float(m[i][j])
+                if w is not None and w > 0:
+                    G.add_edge(idx_map[i], idx_map[j], weight=w)
+
+    pos = nx.spring_layout(G, seed=42, iterations=50)
+    nx.draw_networkx_nodes(G, pos, node_color='#3498db', node_size=900, alpha=0.8, ax=ax2)
+    edges = G.edges()
+    weights = [max(0.5, G[u][v]['weight'] * 2) for u, v in edges] if len(G.edges) > 0 else []
+    if weights:
+        nx.draw_networkx_edges(G, pos, width=weights, edge_color='#2980b9', alpha=0.6, arrowsize=18, ax=ax2)
+    labels = nx.get_node_attributes(G, 'label')
+    nx.draw_networkx_labels(G, pos, labels, font_size=8, ax=ax2)
+    ax2.set_title('Attention Flow Graph (Kept Steps Only)', color='#2c3e50', pad=12)
+    ax2.axis('off')
+
+    plt.tight_layout(pad=2.0)
+    img_base64 = fig_to_base64(fig)
+    plt.close(fig)
+    return img_base64
+
+def select_steps_topp(step_attention_matrix, top_p):
+    if top_p <= 0:
+        raise ValueError("top_p must be greater than 0")
+    n_steps = step_attention_matrix.shape[1]
+    stack = [n_steps - 2]
+    visited = set()
+    selected_steps = []
+
+    while stack:
+        current_step = stack.pop()
+        if current_step in visited:
+            continue
+        visited.add(current_step)
+        selected_steps.append(current_step)
+        if current_step == 0:
+            continue
+
+        attention_scores = step_attention_matrix[1:current_step, current_step]
+        if attention_scores.size == 0:
+            continue
+        sorted_indices = attention_scores.argsort()[::-1]
+        sorted_scores = attention_scores[sorted_indices]
+        if sorted_scores.sum() > 0:
+            normalized_scores = sorted_scores / sorted_scores.sum()
+        else:
+            normalized_scores = np.ones_like(sorted_scores) / len(sorted_scores)
+        cumulative_probs = np.cumsum(normalized_scores)
+        topp_indices = sorted_indices[cumulative_probs <= top_p]
+        if len(topp_indices) == 0 and len(sorted_indices) > 0:
+            topp_indices = np.array([sorted_indices[0]])
+        for idx in topp_indices:
+            if idx+1 not in visited:
+                stack.append(idx+1)
+
+    ordered_indices = np.argsort(selected_steps)
+    selected_steps = [selected_steps[i] for i in ordered_indices]
+    selected_steps.insert(0, 0)
+    return selected_steps
+
+def main():
+    try:
+        matrix = np.array(${JSON.stringify(problem.step_attention_matrix)})
+        steps = ${JSON.stringify(steps)}
+        p = float(${Number.isFinite(p) ? p : 0.9})
+
+        selected = select_steps_topp(matrix, p)
+        kept_nodes = [i for i in selected if 0 <= int(i) < len(steps)]
+        kept_steps = [steps[i]['step_tag'] for i in kept_nodes]
+
+        image_base64 = create_visualizations(matrix, steps, kept_nodes)
+
+        result = {
+            "image": image_base64,
+            "kept_steps": kept_steps
+        }
+        return json.dumps(result)
+    except Exception as e:
+        err = {"error": str(e), "trace": traceback.format_exc()}
+        return json.dumps(err)
+
+main()
+`)
+let resultData;
+try {
+  if (typeof raw === 'string') {
+    resultData = JSON.parse(raw.trim());
+  } else {
+    resultData = raw;
+  }
+} catch (e) {
+  console.error('JSON parse failed. Raw:', raw, e);
+  document.getElementById('analysis-results').innerHTML = `
+    <div style="color:#c00; white-space:pre-wrap;">分析失败：返回结果不是有效的 JSON。
+原始返回：
+${String(raw)}</div>
+  `;
+  throw e;
+}
+
+if (resultData && resultData.error) {
+  document.getElementById('analysis-results').innerHTML = `
+    <div style="color:#c00; white-space:pre-wrap;">分析失败：
+${resultData.error}
+
+${resultData.trace || ''}</div>
+  `;
+} else {
+  document.getElementById('analysis-results').innerHTML = `
+    <div class="visualization-results" style="margin-top: 10px; padding: 10px;">
+      <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
+      <img src="data:image/png;base64,${resultData.image}" alt="Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
+      ${Array.isArray(resultData.kept_steps) ? `<div style="margin-top:8px; color:#2c3e50;">Keep Steps：${resultData.kept_steps.join(' , ')}</div>` : ''}
+    </div>
+  `;
+}
             } catch (error) {
                 console.error("Analysis failed:", error);
                 document.getElementById('analysis-results').innerHTML = `
