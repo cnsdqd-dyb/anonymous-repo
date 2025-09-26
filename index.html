@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+  
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/vis-network.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-data/7.1.2/vis-data.min.js"></script>
   <style>
@@ -56,6 +62,586 @@
             display: flex;
             gap: 1rem;
         }
+
+
+    /**/
+        * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Google Sans', 'Noto Sans', sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    /* Header styling matching index.html */
+    .hero {
+      background: white;
+      border-bottom: 1px solid #e9ecef;
+      margin-bottom: 2rem;
+    }
+    
+    .hero-body {
+      padding: 2rem 0;
+      text-align: center;
+    }
+    
+    h1 {
+      font-family: 'Castoro', serif;
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+    
+    h2, h3 {
+      font-family: 'Castoro', serif;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+    
+    h2 { font-size: 1.8rem; }
+    h3 { font-size: 1.4rem; }
+    
+    /* Card styling */
+    .card {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    /* Button styling matching index.html academic style */
+    .button {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: white;
+      border: 2px solid #2c3e50;
+      color: #2c3e50;
+      text-decoration: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      margin: 0.25rem;
+    }
+    
+    .button:hover {
+      background: #2c3e50;
+      color: white;
+      transform: translateY(-1px);
+    }
+    
+    .button.primary {
+      background: #2c3e50;
+      color: white;
+    }
+    
+    .button.primary:hover {
+      background: #34495e;
+    }
+    
+    .button.success { border-color: #27ae60; color: #27ae60; }
+    .button.success:hover { background: #27ae60; color: white; }
+    
+    .button.warning { border-color: #f39c12; color: #f39c12; }
+    .button.warning:hover { background: #f39c12; color: white; }
+    
+    .button.info { border-color: #3498db; color: #3498db; }
+    .button.info:hover { background: #3498db; color: white; }
+    
+    .button.danger { border-color: #e74c3c; color: #e74c3c; }
+    .button.danger:hover { background: #e74c3c; color: white; }
+    
+    /* Split view layout */
+    .split-view {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      position: relative;
+    }
+    
+    .split-view::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      background: #e9ecef;
+      margin-left: -0.5px;
+    }
+    
+    /* Step boxes */
+    .step-box {
+      border: 1px solid #e9ecef;
+      padding: 1rem;
+      margin: 0.75rem 0;
+      border-radius: 6px;
+      background: white;
+      font-size: 0.95rem;
+    }
+    
+    .step-box strong {
+      color: #2c3e50;
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Status indicators */
+    .correct {
+      border-left: 4px solid #27ae60;
+      background: #f8fff9;
+    }
+    
+    .incorrect {
+      border-left: 4px solid #e74c3c;
+      background: #fef9f9;
+    }
+    
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .status-indicator.correct {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .status-indicator.incorrect {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .status-indicator::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 0.25rem;
+    }
+    
+    .status-indicator.correct::before {
+      background: #28a745;
+    }
+    
+    .status-indicator.incorrect::before {
+      background: #dc3545;
+    }
+    
+    /* Progress bar */
+    .progress-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    
+    .progress-bar {
+      flex: 1;
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-bar-fill {
+      height: 100%;
+      background: #2c3e50;
+      transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+      font-size: 0.9rem;
+      color: #666;
+      min-width: 60px;
+      text-align: center;
+    }
+    
+    /* Form elements */
+    select, input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: white;
+    }
+    
+    select:focus, input:focus {
+      outline: none;
+      border-color: #2c3e50;
+      box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #2c3e50;
+      font-size: 0.9rem;
+    }
+    
+    /* Grid layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    /* Loading animation */
+    .loading {
+      position: relative;
+      padding: 2rem;
+      text-align: center;
+      color: #666;
+    }
+    
+    .loading:after {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #e9ecef;
+      border-radius: 50%;
+      border-top-color: #2c3e50;
+      animation: spin 1s linear infinite;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Alert messages */
+    .alert {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      border-left: 4px solid;
+    }
+    
+    .alert.error {
+      background: #fef2f2;
+      border-color: #e74c3c;
+      color: #c53030;
+    }
+    
+    .alert.warning {
+      background: #fffbeb;
+      border-color: #f39c12;
+      color: #d69e2e;
+    }
+    
+    .alert.info {
+      background: #eff6ff;
+      border-color: #3498db;
+      color: #2b77c9;
+    }
+    
+    /* Analysis results */
+    .analysis-results {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-top: 1rem;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    
+    .analysis-results pre {
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    /* Visualization results styling */
+    .visualization-results {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .visualization-results img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
+    }
+
+    .ranking-results {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    .ranking-results pre {
+      color: #2c3e50;
+      margin: 0;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal.hidden {
+      display: none;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 600px;
+      width: 90%;
+      margin: 1rem;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .help-section {
+      background: #f8f9fa;
+      border-left: 4px solid #2c3e50;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    
+    .help-section h4 {
+      margin-bottom: 0.5rem;
+      color: #2c3e50;
+    }
+    
+    .help-section ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .help-section li {
+      padding: 0.25rem 0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+    
+    /* Collapsible sections */
+    .collapsible {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      margin: 0.5rem 0;
+      overflow: hidden;
+    }
+    
+    .collapsible-header {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid transparent;
+      background: white;
+    }
+    
+    .collapsible-header:hover {
+      background: #f8f9fa;
+      border-bottom-color: #e9ecef;
+    }
+    
+    .collapsible-header strong {
+      color: #2c3e50;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    
+    .collapsible-toggle {
+      font-size: 0.9rem;
+      color: #666;
+      transition: transform 0.2s ease;
+      font-weight: bold;
+    }
+    
+    .collapsible.expanded .collapsible-toggle {
+      transform: rotate(180deg);
+    }
+    
+    .collapsible-content{
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: white;
+    }
+
+    .collapsible-uns {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: white;
+    }
+
+    .collapsible.expanded .collapsible-content {
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .collapsible.expanded .collapsible-uns {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .collapsible-body {
+      padding: 1rem;
+      color: #555;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      border-top: 1px solid #f1f3f4;
+    }
+
+    /* Analysis parameters */
+    .analysis-params {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      border: 1px solid #e9ecef;
+    }
+    
+    .analysis-params.hidden {
+      display: none;
+    }
+    
+    .param-input {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .param-input input {
+      width: 120px;
+      flex-shrink: 0;
+    }
+
+    .right-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .split-view {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      .split-view::after {
+        display: none;
+      }
+      
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .param-input {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .param-input input {
+        width: 100%;
+      }
+      
+      .hero .container > div {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+      
+      .hero h1 {
+        margin-bottom: 0;
+      }
+    }
+
+    .truncate-text {
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 20ch;
+    }
     </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-B9N9911MNC"></script>
@@ -133,9 +719,9 @@
                 </span>
 
                 <span class="link-block">
-                  <a href="#Examples"
+                  <a href="#SRA"
                      class="nav-link button-55 is-normal">
-                    <span>Examples</span>
+                    <span>Structured Reasoning Analyzer</span>
                     </a>
                 </span> 
                 
@@ -180,7 +766,7 @@
               
               2) <strong>LCS (Longest Common Sequence)</strong>, which improves reasoning quality by identifying optimal common subsequences across multiple generated responses and leveraging these consistent steps as reliable reasoning paths.
               
-              Experiments with <strong>DeepSeek-R1-Distill-Qwen-1.5B</strong> and <strong>7B</strong> models show that our method consistently outperforms <em>GRPO</em> and other carefully tuned baselines across various context lengths (0.5k–8k).
+              Experiments with <strong>DeepSeek-R1-Distill-Qwen-1.5B</strong> and <strong>7B</strong> models show that our method consistently outperforms <em>GRPO</em> and other carefully tuned baselines across various context lengths (0.5k‑8k).
               
               <strong>Structured Reasoning</strong> shows particular strength in:
               • <em>efficiency</em> (better performance at shorter lengths)
@@ -209,7 +795,7 @@
     </div>
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
-        <div style="margin-bottom: 1.5rem;">  <!-- 添加了这个div来包裹图片并提供下方间距 -->
+        <div style="margin-bottom: 1.5rem;">
           <img id="rep" src="static/images/method/pipeline.png" style="width: 100%; max-width: 1000px; max-height:600px;">
         </div>
         <div class="content has-text-justified">
@@ -354,548 +940,909 @@
               <img id="data2" src="static/images/method/transformer_attention_smooth_gradient.png" width="48%" />
             </div>
             <div class="content has-text-justified">
-              According to 70 samples from 1.5B and 7B models with our step attention matrix thresholded at 0.1, we found that layer 0 attends to an average of 6.82 reasoning steps, while layer 1 attends to only 1.41. This produces a repeating broad-versus-local alternation through approximately layers 0~13, suggesting an early division of labor between (i) layers that aggregate multi-step context and (ii) layers that perform local refinement anchored to the immediately preceding step. Beginning around layer 14, all subsequent layers attend to >8 steps (peaking at 12.06), marking a transition to a stable broad-span integration regime that more faithfully ranks step importance. The same qualitative pattern appears in both 1.5B and 7B models: early oscillatory specialization → mid/late sustained global integration. The 7B model shows a smoother (less jagged) broadening trajectory, whereas the 1.5B model preserves sharper alternating contrasts before converging. These consistent cross-scale dynamics imply (1) the broad-span mid–late blocks encode globally consolidating reasoning signals, and (2) pruning or distillation strategies could target redundant narrow-focus early layers or alternating pairs while preserving (or selectively enhancing) the globally integrative mid–late region.
+              According to 70 samples from 1.5B and 7B models with our step attention matrix thresholded at 0.1, we found that layer 0 attends to an average of 6.82 reasoning steps, while layer 1 attends to only 1.41. This produces a repeating broad-versus-local alternation through approximately layers 0~13, suggesting an early division of labor between (i) layers that aggregate multi-step context and (ii) layers that perform local refinement anchored to the immediately preceding step. Beginning around layer 14, all subsequent layers attend to >8 steps (peaking at 12.06), marking a transition to a stable broad-span integration regime that more faithfully ranks step importance. The same qualitative pattern appears in both 1.5B and 7B models: early oscillatory specialization → mid/late sustained global integration. The 7B model shows a smoother (less jagged) broadening trajectory, whereas the 1.5B model preserves sharper alternating contrasts before converging. These consistent cross-scale dynamics imply (1) the broad-span mid—late blocks encode globally consolidating reasoning signals, and (2) pruning or distillation strategies could target redundant narrow-focus early layers or alternating pairs while preserving (or selectively enhancing) the globally integrative mid—late region.
             </div>
         </div>
       </div>
     </div>
   </section>
 
+
+
 <!-- Examples -->
 <section class="section">
-  <div class="container is-widescreen" id="Examples">
-    <div class="link-block">
+  <div class="container is-widescreen" id="SRA">
+    <div class="link-block ">
       <a href="#top" class="nav-link button-55 is-normal">
         <span>Go to Top</span>
       </a>
     </div>
-    <div class="section-title has-text-centered is-centered">
-      <h2 class="title is-3">Examples</h2><br>
+    <div class="section-title has-text-centered is-centered" style="display: flex; justify-content: center; align-items: center; gap: 1rem;">
+      <h2 class="title is-3" style="margin-bottom: 0;">Structured Reasoning Analyzer</h2>
+      <button onclick="showHelp()" class="button">
+        Help (H)
+      </button>
     </div>
 
-    <!-- Control Panel -->
-    <div class="box">
-      <div class="field is-horizontal">
-        <!-- Dataset Selection -->
-        <div class="field-body">
-          <div class="field">
-            <label class="label">Dataset</label>
-            <div class="control">
-              <div class="select">
-                <select id="benchmark-select">
-                  <option value="drop">DROP</option>
-                  <option value="math500">MATH500</option>
-                  <option value="lsat">LSAT</option>
-                  <option value="olympiadbench">OlympiadBench</option>
-                </select>
-              </div>
-            </div>
+      <!-- Help Modal -->
+      <div id="help-modal" class="modal hidden">
+        <div class="modal-content">
+          <h2>Help & Documentation</h2>
+          <div class="help-section">
+            <h4>Keyboard Shortcuts:</h4>
+            <ul>
+              <li>← / → - Navigate between problems</li>
+              <li>M - Run Max-Flow analysis</li>
+              <li>K - Run Top-K analysis</li>
+              <li>P - Run Top-P analysis</li>
+              <li>R - Reload data</li>
+              <li>H - Show this help</li>
+            </ul>
           </div>
-
-          <!-- Model Size Selection -->
-          <div class="field">
-            <label class="label">Model Size</label>
-            <div class="control">
-              <div class="select">
-                <select id="model-size-select">
-                  <option value="1.5b">1.5B</option>
-                  <option value="7b">7B</option>
-                </select>
-              </div>
-            </div>
+          <div class="help-section">
+            <h4>Analysis Methods:</h4>
+            <p><strong>Max-Flow:</strong> Constructs sparse reasoning graphs by analyzing step-to-step attention matrices and measures the quality based on each step's contribution to the final answer.</p>
+            <p><strong>Top-K:</strong> Selects the top K most attended steps at each reasoning stage.</p>
+            <p><strong>Top-P:</strong> Uses nucleus sampling to select steps that cumulatively account for probability mass P.</p>
           </div>
-
-          <!-- Training Method Selection -->
-          <div class="field">
-            <label class="label">Method</label>
-            <div class="control">
-              <div class="select">
-                <select id="training-method-select">
-                  <option value="maxflow">MaxFlow</option>
-                  <option value="grpo">GRPO</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          <button onclick="hideHelp()" class="button primary" style="margin-top: 1rem;">
+            Close
+          </button>
         </div>
       </div>
-    </div>
 
-    <!-- Analysis Controls -->
-    <div class="box">
-      <div class="field is-horizontal">
-        <div class="field-body">
-          <div class="field">
-            <label class="label">Analysis Type</label>
-            <div class="control">
-              <div class="select">
-                <select id="analysis-type-select">
-                  <option value="max_flow">Max Flow</option>
-                  <option value="top_k">Top-K</option>
-                  <option value="top_p">Top-P</option>
-                </select>
+
+      <div class="container">
+        <!-- Data Loading Controls -->
+        <div class="card">
+          <h2 class="title is-4" style="margin-bottom: 3;">Data Configuration</h2>
+          <div class="grid-3">
+            <div>
+              <label>Model Size:</label>
+              <select id="model-size">
+                <option value="1.5b">1.5B Model</option>
+                <option value="7b">7B Model</option>
+              </select>
+            </div>
+            <div>
+              <label>Benchmark Dataset:</label>
+              <select id="benchmark">
+                <option value="olympiadbench">OlympiadBench</option>
+                <option value="lsat">LSAT</option>
+                <option value="math500">Math500</option>
+                <option value="drop">Drop</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: end;">
+              <button onclick="loadData()" class="button primary" style="width: 100%;">
+                Load Data (R)
+              </button>
+            </div>
+          </div>
+
+          <div class="progress-container">
+            <button onclick="prevProblem()" class="button">
+              Previous (←)
+            </button>
+            <div class="progress-bar">
+              <div id="progress-fill" class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <div id="progress-text" class="progress-text">0/0</div>
+            <button onclick="nextProblem()" class="button">
+              Next (→)
+            </button>
+          </div>
+      </div>
+
+        <!-- Main Content -->
+        <div class="card">
+          <div class="split-view">
+            <!-- 左侧结构化推理保持不变 -->
+            <div>
+              <h3 class="title is-4" style="margin-bottom: 3;">Structured Reasoning <span id="structured-id" style="font-size: 0.8rem; color: #666; font-weight: normal;"></span></h3>
+              <div id="structured-content" style="padding-top: 2rem;">
+                <div class="loading">Initializing...</div>
+              </div>
+            </div>
+
+            <!-- 右侧区域 -->
+            <div>
+              <div class="right-header">
+                <h3 class="title is-4" style="margin-bottom: 3; ">
+                  <span id="right-title">Analysis Tools</span>
+                </h3>
+                <button onclick="toggleRightPanel()" class="button is-middium" id="toggle-button">
+                  Compare with other
+                </button>
+              </div>
+              
+              <!-- 内容区域 -->
+              <div id="right-content">
+                <!-- 分析工具面板 -->
+                <div id="analysis-panel" class="panel active">
+                  <div class="grid-3">
+                    <button onclick="showMaxFlowAnalysis()" class="button success">
+                      Max-Flow Analysis (M)
+                    </button>
+                    <button onclick="showTopKAnalysis()" class="button warning">
+                      Top-K Analysis (K)
+                    </button>
+                    <button onclick="showTopPAnalysis()" class="button info">
+                      Top-P Analysis (P)
+                    </button>
+                  </div>
+                  <div id="analysis-params" class="analysis-params hidden">
+                    <!-- Dynamic parameter input area -->
+                  </div>
+                  <div id="analysis-results"></div>
+                </div>
+
+                <!-- 非结构化推理面板 -->
+                <div id="unstructured-panel" class="panel">
+                  <div id="unstructured-content" style="padding-top: 1rem;">
+                    <div class="loading">Initializing...</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="field">
-            <label class="label">Parameter</label>
-            <div class="control">
-              <input class="input" type="number" id="analysis-param" placeholder="Enter parameter value">
-            </div>
-          </div>
+          <script>
+            function toggleRightPanel() {
+              const analysisPanel = document.getElementById('analysis-panel');
+              const unstructuredPanel = document.getElementById('unstructured-panel');
+              const rightTitle = document.getElementById('right-title');
+              const toggleButton = document.getElementById('toggle-button');
 
-          <div class="field">
-            <label class="label">&nbsp;</label>
-            <div class="control">
-              <button class="button is-primary" id="analyze-btn">Analyze</button>
+              if (analysisPanel.classList.contains('active')) {
+                // 切换到非结构化推理
+                analysisPanel.classList.remove('active');
+                unstructuredPanel.classList.add('active');
+                rightTitle.textContent = 'Unstructured Reasoning';
+                toggleButton.textContent = 'Analyse';
+                // 重置分析工具状态
+                document.getElementById('analysis-params').classList.add('hidden');
+                document.getElementById('analysis-results').innerHTML = '';
+              } else {
+                // 切换到分析工具
+                unstructuredPanel.classList.remove('active');
+                analysisPanel.classList.add('active');
+                rightTitle.textContent = 'Analysis Tools';
+                toggleButton.textContent = 'Compare with other';
+              }
+            }
+          </script>
+
+      <script>
+        let currentState = {
+          currentIndex: 0,
+          structuredData: [],
+          unstructuredData: [],
+          modelSize: '1.5b',
+          benchmark: 'olympiadbench'
+        };
+
+        // File path mapping
+        const modelMap = {
+          '1.5b': {
+            'maxflow': 'Structured-R1-Norm',
+            'grpo': 'UNS_GRPO_1_5B_4k'
+          },
+          '7b': {
+            'maxflow': 'MAX_FLOW_7B_4k',
+            'grpo': 'UNS_GRPO_7B_4k'
+          }
+        };
+
+        // Initialize Pyodide
+        async function initPyodide() {
+          try {
+            document.getElementById('structured-content').innerHTML = '<div class="loading">Initializing Python environment...</div>';
+            document.getElementById('unstructured-content').innerHTML = '<div class="loading">Initializing Python environment...</div>';
+            
+            let pyodide = await loadPyodide();
+            await pyodide.loadPackage(['numpy', 'networkx', 'matplotlib']);
+            window.pyodide = pyodide;
+            
+            // Configure matplotlib for inline display
+            await pyodide.runPythonAsync(`
+              import matplotlib
+              matplotlib.use('Agg')  # Use non-interactive backend
+              import matplotlib.pyplot as plt
+              import io
+              import base64
+            `);
+            
+            console.log('✅ Pyodide initialized');
+            
+            // Clear loading indicators
+            document.getElementById('structured-content').innerHTML = '<div class="step-box">Please load data to begin analysis</div>';
+            document.getElementById('unstructured-content').innerHTML = '<div class="step-box">Please load data to begin analysis</div>';
+          } catch (error) {
+            console.error('❌ Pyodide initialization failed:', error);
+            document.getElementById('structured-content').innerHTML = `
+              <div class="alert error">
+                Initialization failed: ${error.message}
+              </div>
+            `;
+            document.getElementById('unstructured-content').innerHTML = `
+              <div class="alert error">
+                Initialization failed: ${error.message}
+              </div>
+            `;
+          }
+        }
+
+        // Load data
+        async function loadData() {
+            const modelSize = document.getElementById('model-size').value;
+            const benchmark = document.getElementById('benchmark').value;
+            const structuredPath = `./static/json_data/${benchmark}_results_${modelMap[modelSize].maxflow}_step_attention.json`;
+            const unstructuredPath = `./static/json_data/${benchmark}_results_${modelMap[modelSize].grpo}.json`;
+            
+            try {
+                // Show loading state
+                document.getElementById('structured-content').innerHTML = '<div class="loading">Loading structured data...</div>';
+                document.getElementById('unstructured-content').innerHTML = '<div class="loading">Loading unstructured data...</div>';
+
+                // Fetch both data sources in parallel
+                const [structuredResponse, unstructuredResponse] = await Promise.all([
+                    fetch(structuredPath),
+                    fetch(unstructuredPath)
+                ]);
+
+                if (!structuredResponse.ok || !unstructuredResponse.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                // Parse JSON data
+                const structuredJson = await structuredResponse.json();
+                const unstructuredJson = await unstructuredResponse.json();
+
+                // Check data structure and assign correctly
+                if (!structuredJson.structured?.details) {
+                    throw new Error('Invalid structured data format: missing structured.details');
+                }
+                if (!unstructuredJson.unstructured?.details) {
+                    throw new Error('Invalid unstructured data format: missing unstructured.details');
+                }
+
+                // Update state
+                currentState.structuredData = structuredJson.structured.details;
+                currentState.unstructuredData = unstructuredJson.unstructured.details;
+                currentState.currentIndex = 0;
+                currentState.modelSize = modelSize;
+                currentState.benchmark = benchmark;
+
+                // Update display
+                updateDisplay();
+                console.log("✅ Data loaded successfully");
+            } catch (error) {
+                console.error("❌ Data loading failed:", error);
+                document.getElementById('structured-content').innerHTML = `
+                    <div class="alert error">
+                        Loading failed: ${error.message}
+                    </div>
+                `;
+                document.getElementById('unstructured-content').innerHTML = `
+                    <div class="alert error">
+                        Loading failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Update display
+        function updateDisplay() {
+          // Ensure data exists
+          if (!currentState.structuredData || !currentState.unstructuredData) {
+              console.error("No data available");
+              return;
+          }
+
+          const problem = currentState.structuredData[currentState.currentIndex];
+          if (!problem) {
+              console.error("Invalid problem index");
+              return;
+          }
+          
+          const unstructured = findMatchingProblem(problem.problem);
+          
+          document.getElementById('structured-content').innerHTML = `
+            <div class="step-box">
+              <strong>Problem:</strong><br>${problem.problem}
             </div>
-          </div>
-        </div>
-      </div>
+            <div class="step-box ${problem.correct ? problem.tokens === 1 ? 'incorrect' : 'correct' : 'incorrect'}">
+              Predicted Answer : 
+              <div class="status-indicator ${problem.correct ? problem.tokens === 1 ? 'incorrect' : 'correct' : 'incorrect'}">
+                ${problem.correct ? 'Correct' : 'Incorrect'}
+              </div>
+              <br>${problem.prediction}
+            </div>
+            <div class="step-box">
+              <strong>Token Usage:</strong><br>
+              ${problem.tokens === 1 ? 
+                '<span style="color: #e74c3c;">Out of Maximum Length</span>' : 
+                problem.tokens}
+            </div>
+            <div id="steps">
+              ${parseAndDisplaySteps(problem)}
+            </div>
+          `;
+          
+          // Function to parse reasoning steps with collapsible display
+          function parseAndDisplaySteps(problem) {
+            if (!problem.reasoning) return '';
+            
+            // Parse tags and content from reasoning text
+            const pattern = /<(\w+)>(.*?)(?=<\w+>|$)/gs;
+            const matches = [...problem.reasoning.matchAll(pattern)];
+            
+            // Match parsing results with step information - all steps are now collapsible
+            return problem.step_attention_steps.map(step => {
+              const matchingStep = matches.find(match => match[1] === step.step_tag);
+              let content = matchingStep ? matchingStep[2].trim() : '';
+              
+              // If it's an ANSWER step, replace content with prediction result
+              if (step.step_tag.toLowerCase() === 'answer') {
+                content = problem.prediction;
+              }
+              
+              // All steps are now collapsible
+              return `
+                <div class="collapsible" onclick="toggleCollapsible(this)">
+                  <div class="collapsible-header">
+                    <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
+                    <span class="collapsible-toggle">▼</span>
+                  </div>
+                  <div class="collapsible-content">
+                    <div class="collapsible-body">${content || 'No content available'}</div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+
+          // Display unstructured content with collapsible reasoning
+          if (unstructured) {
+            const reasoningContent = unstructured.reasoning ? 
+              `<div class="collapsible" onclick="toggleCollapsible(this)">
+                <div class="collapsible-header">
+                  <strong>Reasoning Process</strong>
+                  <span class="collapsible-toggle">▼</span>
+                </div>
+                <div class="collapsible-uns">
+                  <div class="collapsible-body">${unstructured.reasoning}</div>
+                </div>
+              </div>` :
+              `<div class="step-box">
+                <strong>Reasoning Process:</strong><br>No reasoning content available
+              </div>`;
+
+            document.getElementById('unstructured-content').innerHTML = `
+              <div class="step-box">
+                <strong>Problem:</strong><br>${unstructured.problem}
+              </div>
+              <div class="step-box ${unstructured.correct ? unstructured.tokens === 1 ? 'incorrect' : 'correct' : 'incorrect'}">
+                Predicted Answer :
+                <div class="status-indicator ${unstructured.correct ? unstructured.tokens === 1 ? 'incorrect' : 'correct' : 'incorrect'}">
+                  ${unstructured.correct ? unstructured.tokens === 1 ? 'Incorrect' : 'Correct' : 'Incorrect'}
+                </div>
+                <br>
+                <div class="truncate-text">${unstructured.prediction}</div>
+              </div>
+              <div class="step-box">
+                <strong>Token Usage:</strong><br>
+                ${unstructured.tokens === 1 ? 
+                  '<span style="color: #e74c3c;">Out of Maximum Length</span>' : 
+                  unstructured.tokens}
+              </div>
+              ${reasoningContent}
+            `;
+          } else {
+            document.getElementById('unstructured-content').innerHTML = `
+              <div class="step-box">No matching unstructured reasoning found</div>
+            `;
+          }
+          
+          // Update progress bar
+          updateProgress();
+        }
+
+        // Find matching unstructured reasoning
+        function findMatchingProblem(problemText) {
+          return currentState.unstructuredData.find(item => item.problem === problemText);
+        }
+
+        // Toggle collapsible sections
+        function toggleCollapsible(element) {
+          element.classList.toggle('expanded');
+        }
+
+        // Update progress bar
+        function updateProgress() {
+          const total = currentState.structuredData.length;
+          const current = currentState.currentIndex + 1;
+          const percentage = (current / total) * 100;
+          
+          document.getElementById('progress-fill').style.width = `${percentage}%`;
+          document.getElementById('progress-text').textContent = `${current}/${total}`;
+        }
+
+        // Analysis functions
+async function showMaxFlowAnalysis() {
+  // 更新输入区域，移除Run Analysis按钮，添加实时更新
+  document.getElementById('analysis-params').innerHTML = `
+    <div class="param-input">
+      <label>Number of nodes to remove:</label>
+      <input type="number" id="remove-n" value="0" min="0" oninput="runMaxFlowAnalysis()">
     </div>
+  `;
+  document.getElementById('analysis-params').classList.remove('hidden');
+  // 初始运行一次分析
+  runMaxFlowAnalysis();
+}
 
-    <!-- Results Display -->
-    <div class="box">
-      <div id="problem-display" class="content">
-        <h4>Problem Information</h4>
-        <div id="problem-content"></div>
-      </div>
-      <div id="analysis-results" class="content">
-        <h4>Analysis Results</h4>
-        <div id="results-content"></div>
-      </div>
-      
-      <!-- Navigation Controls -->
-      <div class="field is-grouped is-grouped-centered mt-4">
-        <p class="control">
-          <button class="button" id="prev-btn">Previous</button>
-        </p>
-        <p class="control">
-          <button class="button" id="next-btn">Next</button>
-        </p>
-      </div>
+async function runMaxFlowAnalysis() {
+    const removeN = parseInt(document.getElementById('remove-n').value);
+    const problem = currentState.structuredData[currentState.currentIndex];
+    
+    try {
+        document.getElementById('analysis-results').innerHTML = '<div class="loading">Analyzing...</div>';
+        
+        if (!problem.step_attention_matrix || !problem.step_attention_steps) {
+            throw new Error('Missing required data');
+        }
+
+        const steps = [
+            {"step_tag": "question", "step": 0},
+            ...problem.step_attention_steps
+        ];
+        
+        const result = await pyodide.runPythonAsync(`
+            import networkx as nx
+            import numpy as np
+            import matplotlib.pyplot as plt
+            import io
+            import base64
+            
+            def create_visualizations(matrix, steps):
+                # 创建一个并排的图表布局
+                fig = plt.figure(figsize=(16, 6))
+                
+                # 热力图
+                ax1 = plt.subplot(121)
+                im = ax1.imshow(matrix, cmap='Blues')  # 使用蓝色调色板
+                
+                # 添加标签
+                step_labels = [step['step_tag'] for step in steps]
+                ax1.set_xticks(range(len(step_labels)))
+                ax1.set_yticks(range(len(step_labels)))
+                ax1.set_xticklabels(step_labels, rotation=45, ha='right', fontsize=8)
+                ax1.set_yticklabels(step_labels, fontsize=8)
+                
+                # 添加颜色条
+                plt.colorbar(im, ax=ax1, label='Attention Weight')
+                ax1.set_title('Step Attention Matrix', color='#2c3e50', pad=20)
+                
+                # 注意力流图
+                ax2 = plt.subplot(122)
+                G = nx.DiGraph()
+                
+                # 添加节点
+                for i, step in enumerate(steps):
+                    G.add_node(i, label=step['step_tag'])
+                
+                # 添加边
+                for i in range(len(matrix)):
+                    for j in range(len(matrix)):
+                        if matrix[i][j] > 0:
+                            G.add_edge(i, j, weight=matrix[i][j])
+                
+                pos = nx.spring_layout(G, k=1, iterations=50)
+                
+                # 绘制节点
+                nx.draw_networkx_nodes(G, pos, 
+                                     node_color='#3498db',  # 使用蓝色
+                                     node_size=800,
+                                     alpha=0.7,
+                                     ax=ax2)
+                
+                # 绘制边
+                edges = G.edges()
+                if edges:
+                    weights = [G[u][v]['weight'] * 3 for u, v in edges]
+                    nx.draw_networkx_edges(G, pos, 
+                                         width=weights,
+                                         edge_color='#2980b9',  # 深蓝色边
+                                         alpha=0.6,
+                                         arrowsize=15,
+                                         ax=ax2)
+                
+                # 添加标签
+                labels = {i: step['step_tag'][:4] for i, step in enumerate(steps)}  # 缩短标签
+                nx.draw_networkx_labels(G, pos, labels, font_size=7, ax=ax2)
+                
+                ax2.set_title('Attention Flow Graph', color='#2c3e50', pad=20)
+                ax2.axis('off')
+                
+                # 调整布局
+                plt.tight_layout(pad=2.0)
+                
+                # 保存为base64字符串
+                buffer = io.BytesIO()
+                plt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+                buffer.seek(0)
+                
+                image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                plt.close()
+                
+                return image_base64
+
+            def select_steps_by_max_flow(step_attention_matrix, remove_n=0):
+                n_steps = len(step_attention_matrix)
+                G = nx.DiGraph()
+                
+                for i in range(n_steps-1):
+                    G.add_node(i)
+                
+                for i in range(n_steps-1):
+                    for j in range(n_steps-1):
+                        if step_attention_matrix[i][j] > 0:
+                            G.add_edge(i, j, capacity=step_attention_matrix[i][j])
+                
+                node_importance = {}
+                source = 0
+                target = n_steps-2
+                
+                try:
+                    original_max_flow = nx.maximum_flow_value(G, source, target)
+                except:
+                    original_max_flow = 0
+                
+                for node in range(0, n_steps-1):
+                    G_temp = G.copy()
+                    G_temp.remove_node(node)
+                    
+                    try:
+                        new_max_flow = nx.maximum_flow_value(G_temp, source, target)
+                        node_importance[node] = original_max_flow - new_max_flow
+                    except:
+                        node_importance[node] = original_max_flow
+                
+                importance_values = list(node_importance.values())
+                max_importance = max(importance_values[1:-1]) if len(importance_values) > 2 else 1
+                
+                if max_importance != 0:
+                    for node in node_importance:
+                        node_importance[node] = node_importance[node] / max_importance
+                
+                sorted_nodes = sorted(node_importance.items(), key=lambda x: x[1])
+                nodes_to_remove = [node for node, _ in sorted_nodes[:remove_n]]
+                kept_nodes = [i for i in range(n_steps-1) if i not in nodes_to_remove]
+                sorted_nodes = sorted(sorted_nodes, key=lambda x: x[1], reverse=True)
+                
+                return kept_nodes, sorted_nodes
+
+            # 运行分析
+            matrix = np.array(${JSON.stringify(problem.step_attention_matrix)})
+            steps = ${JSON.stringify(steps)}
+            
+            # 创建可视化并获取base64图像
+            image_base64 = create_visualizations(matrix, steps)
+            
+            # 运行max flow分析
+            kept_nodes, sorted_nodes = select_steps_by_max_flow(matrix, ${removeN})
+            kept_steps = [steps[i]['step_tag'] for i in kept_nodes]
+            importance_list = [f"{steps[node]['step_tag']}: {importance:.3f}" for node, importance in sorted_nodes]
+            
+            # 返回结果和图像
+            result = {
+                'image': image_base64,
+                'ranking': "\\n".join(importance_list)
+            }
+            result
+        `);
+        
+        // 更新分析结果区域
+        document.getElementById('analysis-results').innerHTML = `
+            <div class="visualization-results">
+                <img src="data:image/png;base64,${result.image}" alt="Max-Flow Analysis Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
+                <div class="ranking-results">
+                    <strong>Node Importance Ranking:</strong>
+                    <pre>${result.ranking}</pre>
+                </div>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error("Analysis failed:", error);
+        document.getElementById('analysis-results').innerHTML = `
+            <div class="alert error" style="color: #e74c3c; margin-top: 10px;">
+                Analysis failed: ${error.message}
+            </div>
+        `;
+    }
+}
+
+        async function showTopKAnalysis() {
+          document.getElementById('analysis-params').innerHTML = `
+            <div class="param-input">
+              <label>K value:</label>
+              <input type="number" id="top-k" value="2" min="1">
+              <button onclick="runTopKAnalysis()" class="button warning">
+                Run Analysis
+              </button>
+            </div>
+          `;
+          document.getElementById('analysis-params').classList.remove('hidden');
+        }
+
+        async function runTopKAnalysis() {
+          const k = parseInt(document.getElementById('top-k').value);
+          const problem = currentState.structuredData[currentState.currentIndex];
+          
+          try {
+              document.getElementById('analysis-results').innerHTML = '<div class="loading">Analyzing...</div>';
+              
+              // Check data
+              if (!problem.step_attention_matrix || !problem.step_attention_steps) {
+                  throw new Error('Missing required data');
+              }
+
+              const steps = [
+                  {"step_tag": "question", "step": 0},
+                  ...problem.step_attention_steps
+              ];
+              
+              const result = await pyodide.runPythonAsync(`
+                  import numpy as np
+
+                  def select_steps(step_attention_matrix, top_k):
+                      if top_k <= 0:
+                          raise ValueError("top_k must be greater than 0")
+                      
+                      n_steps = step_attention_matrix.shape[1]
+                      stack = [n_steps - 2]
+                      visited = set()
+                      
+                      selected_steps = []
+                      selected_attention = []
+                      
+                      while stack:
+                          current_step = stack.pop()
+                          
+                          if current_step in visited:
+                              continue
+                          
+                          visited.add(current_step)
+                          selected_steps.append(current_step)
+                          
+                          if current_step == 0:
+                              continue
+                          
+                          attention_scores = step_attention_matrix[1:current_step, current_step]
+                          actual_k = min(top_k, current_step)
+                          topk_indices = attention_scores.argsort()[-actual_k:][::-1]
+                          
+                          for idx in topk_indices:
+                              if idx+1 not in visited:
+                                  stack.append(idx+1)
+                                  selected_attention.append(attention_scores[idx])
+                      
+                      # Sort and add question node
+                      ordered_indices = np.argsort(selected_steps)
+                      selected_steps = [selected_steps[i] for i in ordered_indices]
+                      selected_steps.insert(0, 0)
+                      
+                      return selected_steps
+
+                  # Run analysis
+                  matrix = np.array(${JSON.stringify(problem.step_attention_matrix)})
+                  steps = ${JSON.stringify(steps)}
+                  selected = select_steps(matrix, ${k})
+                  selected_steps = [steps[i]['step_tag'] for i in selected]
+                  f"Selected steps:\\n" + "\\n".join(selected_steps)
+              `);
+              
+              document.getElementById('analysis-results').innerHTML = `
+                  <div class="analysis-results">
+                      <pre>${result}</pre>
+                  </div>
+              `;
+          } catch (error) {
+              console.error("Analysis failed:", error);
+              document.getElementById('analysis-results').innerHTML = `
+                  <div class="alert error">
+                      Analysis failed: ${error.message}
+                  </div>
+              `;
+          }
+      }
+
+        async function showTopPAnalysis() {
+          document.getElementById('analysis-params').innerHTML = `
+            <div class="param-input">
+              <label>P value (0-1):</label>
+              <input type="number" id="top-p" value="0.9" min="0" max="1" step="0.1">
+              <button onclick="runTopPAnalysis()" class="button info">
+                Run Analysis
+              </button>
+            </div>
+          `;
+          document.getElementById('analysis-params').classList.remove('hidden');
+        }
+
+        async function runTopPAnalysis() {
+            const p = parseFloat(document.getElementById('top-p').value);
+            const problem = currentState.structuredData[currentState.currentIndex];
+            
+            try {
+                document.getElementById('analysis-results').innerHTML = '<div class="loading">Analyzing...</div>';
+                
+                // Check data
+                if (!problem.step_attention_matrix || !problem.step_attention_steps) {
+                    throw new Error('Missing required data');
+                }
+
+                const steps = [
+                    {"step_tag": "question", "step": 0},
+                    ...problem.step_attention_steps
+                ];
+                
+                const result = await pyodide.runPythonAsync(`
+                    import numpy as np
+
+                    def select_steps(step_attention_matrix, top_p):
+                        if top_p <= 0:
+                            raise ValueError("top_p must be greater than 0")
+                        
+                        n_steps = step_attention_matrix.shape[1]
+                        stack = [n_steps - 2]
+                        visited = set()
+                        
+                        selected_steps = []
+                        selected_attention = []
+                        selected_probs = []
+                        
+                        while stack:
+                            current_step = stack.pop()
+                            
+                            if current_step in visited:
+                                continue
+                                
+                            visited.add(current_step)
+                            selected_steps.append(current_step)
+                            
+                            if current_step == 0:
+                                continue
+                                
+                            attention_scores = step_attention_matrix[1:current_step, current_step]
+                            sorted_indices = attention_scores.argsort()[::-1]
+                            sorted_scores = attention_scores[sorted_indices]
+                            
+                            if sorted_scores.sum() > 0:
+                                normalized_scores = sorted_scores / sorted_scores.sum()
+                            else:
+                                normalized_scores = np.ones_like(sorted_scores) / len(sorted_scores)
+                                
+                            cumulative_probs = np.cumsum(normalized_scores)
+                            topp_indices = sorted_indices[cumulative_probs <= top_p]
+                            
+                            if len(topp_indices) == 0 and len(sorted_indices) > 0:
+                                topp_indices = np.array([sorted_indices[0]])
+                                
+                            for idx in topp_indices:
+                                if idx+1 not in visited:
+                                    stack.append(idx+1)
+                                    selected_attention.append(attention_scores[idx])
+                                    selected_probs.append(normalized_scores[np.where(sorted_indices == idx)[0][0]])
+                        
+                        # Sort and add question node
+                        ordered_indices = np.argsort(selected_steps)
+                        selected_steps = [selected_steps[i] for i in ordered_indices]
+                        selected_steps.insert(0, 0)
+                        
+                        return selected_steps
+
+                    # Run analysis
+                    matrix = np.array(${JSON.stringify(problem.step_attention_matrix)})
+                    steps = ${JSON.stringify(steps)}
+                    selected = select_steps(matrix, ${p})
+                    selected_steps = [steps[i]['step_tag'] for i in selected]
+                    f"Selected steps:\\n" + "\\n".join(selected_steps)
+                `);
+                
+                document.getElementById('analysis-results').innerHTML = `
+                    <div class="analysis-results">
+                        <pre>${result}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error("Analysis failed:", error);
+                document.getElementById('analysis-results').innerHTML = `
+                    <div class="alert error">
+                        Analysis failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Navigation functions
+        function prevProblem() {
+          if (currentState.currentIndex > 0) {
+            currentState.currentIndex--;
+            updateDisplay();
+          }
+        }
+
+        function nextProblem() {
+          if (currentState.currentIndex < currentState.structuredData.length - 1) {
+            currentState.currentIndex++;
+            updateDisplay();
+          }
+        }
+
+        // Help functions
+        function showHelp() {
+          document.getElementById('help-modal').classList.remove('hidden');
+        }
+
+        function hideHelp() {
+          document.getElementById('help-modal').classList.add('hidden');
+        }
+
+        // Exit function
+        function quit() {
+          if (confirm('Are you sure you want to exit?')) {
+            window.close();
+          }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+          switch(e.key) {
+            case 'ArrowLeft':
+              prevProblem();
+              break;
+            case 'ArrowRight':
+              nextProblem();
+              break;
+            case 'h':
+            case 'H':
+              showHelp();
+              break;
+            case 'q':
+            case 'Q':
+              quit();
+              break;
+            case 'm':
+            case 'M':
+              showMaxFlowAnalysis();
+              break;
+            case 'k':
+            case 'K':
+              showTopKAnalysis();
+              break;
+            case 'p':
+            case 'P':
+              showTopPAnalysis();
+              break;
+            case 'r':
+            case 'R':
+              loadData();
+              break;
+          }
+        });
+
+        // Initialize
+        initPyodide();
+      </script>
+
+
     </div>
   </div>
-
-  <script>
-    class WebReasoningAnalyzer {
-        constructor() {
-            this.currentIndex = 0;
-            this.data = null;
-            this.initializeEventListeners();
-        }
-
-        initializeEventListeners() {
-            document.getElementById('analyze-btn').addEventListener('click', () => this.analyze());
-            document.getElementById('prev-btn').addEventListener('click', () => this.previousProblem());
-            document.getElementById('next-btn').addEventListener('click', () => this.nextProblem());
-            
-            // Add change listeners for selectors
-            ['benchmark-select', 'model-size-select', 'training-method-select'].forEach(id => {
-                document.getElementById(id).addEventListener('change', () => this.loadData());
-            });
-
-            document.getElementById('analysis-type-select').addEventListener('change', () => {
-                this.updateParameterPlaceholder();
-            });
-        }
-
-        async loadData() {
-            const benchmark = document.getElementById('benchmark-select').value;
-            const modelSize = document.getElementById('model-size-select').value;
-            const method = document.getElementById('training-method-select').value;
-
-            const modelName = this.getModelName(modelSize, method);
-            const jsonPath = `/static/json_data/${benchmark}_results_${modelName}.json`;
-
-            try {
-                const response = await fetch(jsonPath);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const jsonData = await response.json();
-                
-                // 根据不同的方法获取对应的数据结构
-                if (method === 'maxflow') {
-                    if (!jsonData.structured?.details) {
-                        throw new Error('Invalid data structure: missing structured.details');
-                    }
-                    this.data = jsonData.structured.details;
-                } else if (method === 'grpo') {
-                    if (!jsonData.unstructured?.details) {
-                        throw new Error('Invalid data structure: missing unstructured.details');
-                    }
-                    this.data = jsonData.unstructured.details;
-                } else {
-                    throw new Error(`Unknown method: ${method}`);
-                }
-
-                if (!Array.isArray(this.data)) {
-                    throw new Error('Invalid data format: details is not an array');
-                }
-
-                this.currentIndex = 0;
-                this.displayCurrentProblem();
-                
-                console.log(`Successfully loaded ${this.data.length} problems for ${method}`);
-            } catch (error) {
-                console.error('Error loading data:', error);
-                document.getElementById('problem-content').innerHTML = `
-                    <div class="notification is-danger">
-                        <p>Error loading data:</p>
-                        <p>Path: ${jsonPath}</p>
-                        <p>Method: ${method}</p>
-                        <p>Error: ${error.message}</p>
-                        <p>Data Structure: ${method === 'maxflow' ? 'structured' : 'unstructured'}</p>
-                    </div>`;
-            }
-        }
-
-        getModelName(modelSize, method) {
-            const modelMap = {
-                '1.5b': {
-                    'maxflow': 'Structured-R1-Norm',
-                    'grpo': 'UNS_GRPO_1_5B_4k'
-                },
-                '7b': {
-                    'maxflow': 'MAX_FLOW_7B_4k',
-                    'grpo': 'UNS_GRPO_7B_4k'
-                }
-            };
-            return modelMap[modelSize][method];
-        }
-
-        displayCurrentProblem() {
-            if (!this.data || this.currentIndex >= this.data.length) return;
-
-            const problem = this.data[this.currentIndex];
-            const problemHtml = `
-                <div class="problem-info">
-                    <p><strong>Problem ID:</strong> ${problem.problem_id}</p>
-                    <p><strong>Batch ID:</strong> ${problem.batch_id}</p>
-                    <p><strong>Correct:</strong> ${problem.correct}</p>
-                    <hr>
-                    <p><strong>Problem:</strong></p>
-                    <p>${this.cleanText(problem.problem)}</p>
-                    <hr>
-                    <p><strong>Reasoning:</strong></p>
-                    <p>${this.cleanText(problem.reasoning)}</p>
-                    <hr>
-                    <p><strong>Prediction:</strong></p>
-                    <p>${this.cleanText(problem.prediction)}</p>
-                    <hr>
-                    <p><strong>Ground Truth:</strong></p>
-                    <p>${this.cleanText(problem.ground_truth)}</p>
-                </div>
-            `;
-
-            document.getElementById('problem-content').innerHTML = problemHtml;
-            document.getElementById('results-content').innerHTML = ''; // Clear previous results
-        }
-
-        cleanText(text) {
-            return text.replace(/\n/g, '<br>');
-        }
-
-        updateParameterPlaceholder() {
-            const type = document.getElementById('analysis-type-select').value;
-            const input = document.getElementById('analysis-param');
-            
-            switch(type) {
-                case 'max_flow':
-                    input.placeholder = 'Enter number of nodes to remove';
-                    break;
-                case 'top_k':
-                    input.placeholder = 'Enter k value';
-                    break;
-                case 'top_p':
-                    input.placeholder = 'Enter p value (0-1)';
-                    break;
-            }
-        }
-
-        analyze() {
-            if (!this.data) return;
-
-            const problem = this.data[this.currentIndex];
-            const type = document.getElementById('analysis-type-select').value;
-            const param = parseFloat(document.getElementById('analysis-param').value);
-
-            let results = '';
-            switch(type) {
-                case 'max_flow':
-                    results = this.analyzeMaxFlow(problem, param);
-                    break;
-                case 'top_k':
-                    results = this.analyzeTopK(problem, param);
-                    break;
-                case 'top_p':
-                    results = this.analyzeTopP(problem, param);
-                    break;
-            }
-
-            document.getElementById('results-content').innerHTML = results;
-        }
-
-        analyzeMaxFlow(problem, removeN = 0) {
-            const matrix = problem.step_attention_matrix;
-            const steps = [...problem.step_attention_steps];
-            steps.unshift({ step_tag: "question", step_id: 0 });
-
-            if (!matrix) {
-                return '<div class="notification is-warning">No attention matrix data available</div>';
-            }
-
-            // 创建图结构
-            const n_steps = matrix.length;
-            const graph = this.createGraph(matrix);
-            
-            // 计算节点重要性
-            const nodeImportance = this.calculateNodeImportance(graph, n_steps);
-            
-            // 归一化重要性分数
-            const normalizedImportance = this.normalizeImportance(nodeImportance);
-            
-            // 排序节点
-            const sortedNodes = Object.entries(normalizedImportance)
-                .sort((a, b) => b[1] - a[1]);
-            
-            // 确定要移除的节点
-            const nodesToRemove = sortedNodes.slice(0, removeN).map(n => parseInt(n[0]));
-            const keptNodes = [...Array(n_steps-1).keys()].filter(i => !nodesToRemove.includes(i));
-
-            // 生成结果HTML
-            let resultsHtml = '<div class="content">';
-            
-            // 显示保留的步骤
-            resultsHtml += '<h5>Kept Steps:</h5><ul>';
-            keptNodes.forEach(nodeIndex => {
-                resultsHtml += `<li>${steps[nodeIndex].step_tag}</li>`;
-            });
-            resultsHtml += '</ul>';
-
-            // 显示步骤重要性排序
-            resultsHtml += '<h5>Step Importance Ranking:</h5><ul>';
-            sortedNodes.forEach(([nodeIndex, importance]) => {
-                resultsHtml += `
-                    <li>
-                        <strong>${steps[parseInt(nodeIndex)].step_tag}</strong>: 
-                        <div class="progress-container">
-                            <progress class="progress is-info" 
-                                    value="${importance * 100}" 
-                                    max="100">
-                                ${(importance * 100).toFixed(1)}%
-                            </progress>
-                            <span class="progress-value">${(importance * 100).toFixed(1)}%</span>
-                        </div>
-                    </li>`;
-            });
-            resultsHtml += '</ul>';
-
-            // 添加图形可视化
-            resultsHtml += '<h5>Attention Flow Graph:</h5>';
-            resultsHtml += '<div id="attention-graph" style="height: 400px; border: 1px solid #ddd;"></div>';
-            
-            resultsHtml += '</div>';
-
-            // 在返回结果后渲染图形
-            setTimeout(() => this.renderAttentionGraph(matrix, steps, normalizedImportance), 100);
-
-            return resultsHtml;
-        }
-
-        createGraph(matrix) {
-            const graph = {};
-            const n_steps = matrix.length;
-
-            for (let i = 0; i < n_steps - 1; i++) {
-                graph[i] = {};
-                for (let j = 0; j < n_steps - 1; j++) {
-                    if (matrix[i][j] > 0) {
-                        graph[i][j] = matrix[i][j];
-                    }
-                }
-            }
-
-            return graph;
-        }
-
-        calculateNodeImportance(graph, n_steps) {
-            const nodeImportance = {};
-            const source = 0;
-            const target = n_steps - 2;
-
-            // 计算原始最大流
-            const originalMaxFlow = this.calculateMaxFlow(graph, source, target);
-
-            // 计算每个节点的重要性
-            for (let node = 0; node < n_steps - 1; node++) {
-                const tempGraph = this.removeNode(graph, node);
-                const newMaxFlow = this.calculateMaxFlow(tempGraph, source, target);
-                nodeImportance[node] = originalMaxFlow - newMaxFlow;
-            }
-
-            return nodeImportance;
-        }
-
-        calculateMaxFlow(graph, source, target) {
-            // Ford-Fulkerson算法实现
-            const residualGraph = JSON.parse(JSON.stringify(graph));
-            let maxFlow = 0;
-
-            while (true) {
-                const path = this.findPath(residualGraph, source, target);
-                if (!path) break;
-
-                let pathFlow = Infinity;
-                for (let i = 0; i < path.length - 1; i++) {
-                    pathFlow = Math.min(pathFlow, residualGraph[path[i]][path[i + 1]] || 0);
-                }
-
-                for (let i = 0; i < path.length - 1; i++) {
-                    const u = path[i], v = path[i + 1];
-                    residualGraph[u][v] = (residualGraph[u][v] || 0) - pathFlow;
-                    residualGraph[v][u] = (residualGraph[v][u] || 0) + pathFlow;
-                }
-
-                maxFlow += pathFlow;
-            }
-
-            return maxFlow;
-        }
-
-        findPath(graph, source, target, visited = new Set()) {
-            if (source === target) return [target];
-            
-            visited.add(source);
-            for (const next in graph[source]) {
-                if (!visited.has(parseInt(next)) && graph[source][next] > 0) {
-                    const path = this.findPath(graph, parseInt(next), target, visited);
-                    if (path) return [source, ...path];
-                }
-            }
-            
-            return null;
-        }
-
-        removeNode(graph, node) {
-            const newGraph = JSON.parse(JSON.stringify(graph));
-            delete newGraph[node];
-            for (const key in newGraph) {
-                if (newGraph[key][node]) {
-                    delete newGraph[key][node];
-                }
-            }
-            return newGraph;
-        }
-
-        normalizeImportance(importance) {
-            const values = Object.values(importance);
-            const maxImportance = Math.max(...values.slice(1, -1));
-            
-            const normalized = {};
-            for (const [node, value] of Object.entries(importance)) {
-                normalized[node] = maxImportance !== 0 ? value / maxImportance : 0;
-            }
-            
-            return normalized;
-        }
-
-        renderAttentionGraph(matrix, steps, nodeImportance) {
-            const container = document.getElementById('attention-graph');
-            
-            // 创建节点
-            const nodes = new vis.DataSet(
-                steps.map((step, index) => ({
-                    id: index,
-                    label: step.step_tag,
-                    value: nodeImportance[index] || 0,
-                    color: {
-                        background: `rgba(66, 153, 225, ${nodeImportance[index] || 0})`,
-                        border: '#2b6cb0'
-                    }
-                }))
-            );
-
-            // 创建边
-            const edges = new vis.DataSet();
-            for (let i = 0; i < matrix.length; i++) {
-                for (let j = 0; j < matrix[i].length; j++) {
-                    if (matrix[i][j] > 0) {
-                        edges.add({
-                            from: i,
-                            to: j,
-                            value: matrix[i][j],
-                            arrows: 'to',
-                            width: Math.max(1, matrix[i][j] * 5)
-                        });
-                    }
-                }
-            }
-
-            // 创建网络
-            const data = { nodes, edges };
-            const options = {
-                nodes: {
-                    shape: 'dot',
-                    scaling: {
-                        min: 10,
-                        max: 30
-                    }
-                },
-                edges: {
-                    smooth: {
-                        type: 'curvedCW',
-                        roundness: 0.2
-                    }
-                },
-                physics: {
-                    stabilization: false,
-                    barnesHut: {
-                        gravitationalConstant: -80000,
-                        springConstant: 0.001,
-                        springLength: 200
-                    }
-                }
-            };
-
-            new vis.Network(container, data, options);
-        }
-
-        analyzeTopK(problem, k = 2) {
-            // 实现 Top-K 分析
-            return '<div class="notification is-info">Top-K analysis not implemented yet</div>';
-        }
-
-        analyzeTopP(problem, p = 0.9) {
-            // 实现 Top-P 分析
-            return '<div class="notification is-info">Top-P analysis not implemented yet</div>';
-        }
-
-        previousProblem() {
-            if (this.currentIndex > 0) {
-                this.currentIndex--;
-                this.displayCurrentProblem();
-            }
-        }
-
-        nextProblem() {
-            if (this.data && this.currentIndex < this.data.length - 1) {
-                this.currentIndex++;
-                this.displayCurrentProblem();
-            }
-        }
-    }
-
-    // 初始化分析器
-    document.addEventListener('DOMContentLoaded', () => {
-        window.reasoningAnalyzer = new WebReasoningAnalyzer();
-        window.reasoningAnalyzer.loadData();
-    });
-
-
-
-    
-  </script>
 </section>
+
+</body>
+</html>
