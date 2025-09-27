@@ -1670,8 +1670,8 @@ main()
       } catch (e) {
         console.error('JSON parse failed. Raw:', raw, e);
         document.getElementById('analysis-results').innerHTML = `
-          <div style="color:#c00; white-space:pre-wrap;">分析失败：返回结果不是有效的 JSON。
-      原始返回：
+          <div style="color:#c00; white-space:pre-wrap;"Error: return JSON is not valid.
+      raw return:
       ${String(raw)}</div>
         `;
         throw e;
@@ -1680,7 +1680,7 @@ main()
       // 如果 Python 端返回了错误信息，展示出来
       if (resultData && resultData.error) {
         document.getElementById('analysis-results').innerHTML = `
-          <div style="color:#c00; white-space:pre-wrap;">分析失败：
+          <div style="color:#c00; white-space:pre-wrap;">Error:
       ${resultData.error}
 
       ${resultData.trace || ''}</div>
