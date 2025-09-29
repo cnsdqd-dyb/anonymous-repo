@@ -1126,12 +1126,12 @@ a[href="#SRA"] span {
         // File path mapping
         const modelMap = {
           '1.5b': {
-            'maxflow': 'Structured-R1-Norm',
-            'grpo': 'UNS_GRPO_1_5B_4k'
+            'maxflow': 'model1',
+            'grpo': 'model2'
           },
           '7b': {
-            'maxflow': 'MAX_FLOW_7B_4k',
-            'grpo': 'UNS_GRPO_7B_4k'
+            'maxflow': 'model1',
+            'grpo': 'model2'
           }
         };
 
@@ -1168,8 +1168,8 @@ a[href="#SRA"] span {
         async function loadData() {
             const modelSize = document.getElementById('model-size').value;
             const benchmark = document.getElementById('benchmark').value;
-            const structuredPath = `./static/json_data/${benchmark}_results_${modelMap[modelSize].maxflow}_step_attention.json`;
-            const unstructuredPath = `./static/json_data/${benchmark}_results_${modelMap[modelSize].grpo}.json`;
+            const structuredPath = `./static/display_data/${benchmark}_${modelSize}_${modelMap[modelSize].maxflow}.json`;
+            const unstructuredPath = `./static/display_data/${benchmark}_${modelSize}_${modelMap[modelSize].grpo}.json`;
             
             try {
                 // Show loading state
@@ -1297,21 +1297,33 @@ a[href="#SRA"] span {
             </div>
           `;
           
-          // Function to parse reasoning steps with collapsible display
           function parseAndDisplaySteps(problem) {
             if (!problem.reasoning) return '';
             
             const pattern = /<(\w+)>(.*?)(?=<\w+>|$)/gs;
             const matches = [...problem.reasoning.matchAll(pattern)];
             
+            // 为每个标签类型维护一个计数器
+            const tagCounters = {};
+            
             return problem.step_attention_steps.map(step => {
-              const matchingStep = matches.find(match => match[1] === step.step_tag);
+              const tagName = step.step_tag;
+              
+              // 初始化或递增计数器
+              tagCounters[tagName] = (tagCounters[tagName] || 0);
+              
+              // 找到该标签的第N次出现
+              const matchingSteps = matches.filter(match => match[1] === tagName);
+              const matchingStep = matchingSteps[tagCounters[tagName]];
+              
+              // 递增计数器为下次使用做准备
+              tagCounters[tagName]++;
+              
               let content = matchingStep ? matchingStep[2].trim() : '';
               
               if (step.step_tag.toLowerCase() === 'answer') {
                 content = problem.prediction;
               }
-              
               
               return `
                 <div class="collapsible expanded" onclick="toggleCollapsible(this)">
@@ -1326,6 +1338,7 @@ a[href="#SRA"] span {
               `;
             }).join('');
           }
+
 
 
           // Display unstructured content with collapsible reasoning
@@ -1362,7 +1375,7 @@ a[href="#SRA"] span {
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                max-width: 20ch;  /* 限制大约20个字符的宽度 */
+                max-width: 40ch;  /* 限制大约20个字符的宽度 */
               }
             </style>
               <div class="step-box">
@@ -1700,7 +1713,7 @@ main()
         console.error("Analysis failed:", error);
         document.getElementById('analysis-results').innerHTML = `
             <div class="alert error" style="color: #e74c3c; margin-top: 10px;">
-                Analysis failed: ${error.message}
+                Analysis failed: ${error.message}. Please try refreshing the browser. 
             </div>
         `;
     }
@@ -1926,7 +1939,7 @@ ${resultData.trace || ''}</div>
               console.error("Analysis failed:", error);
               document.getElementById('analysis-results').innerHTML = `
                   <div class="alert error">
-                      Analysis failed: ${error.message}
+                      Analysis failed: ${error.message}. Please try refreshing the browser. 
                   </div>
               `;
           }
@@ -2160,7 +2173,7 @@ ${resultData.trace || ''}</div>
                 console.error("Analysis failed:", error);
                 document.getElementById('analysis-results').innerHTML = `
                     <div class="alert error">
-                        Analysis failed: ${error.message}
+                        Analysis failed: ${error.message}. Please try refreshing the browser. 
                     </div>
                 `;
             }
@@ -2171,6 +2184,7 @@ ${resultData.trace || ''}</div>
           if (currentState.currentIndex > 0) {
             currentState.currentIndex--;
             updateDisplay();
+            showMaxFlowAnalysis();
           }
         }
 
@@ -2178,6 +2192,7 @@ ${resultData.trace || ''}</div>
           if (currentState.currentIndex < currentState.structuredData.length - 1) {
             currentState.currentIndex++;
             updateDisplay();
+            showMaxFlowAnalysis();
           }
         }
 
