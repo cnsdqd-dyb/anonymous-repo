@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 在其他script标签之前添加 -->
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
@@ -671,10 +670,9 @@
 <a href="#SRA"
    class="nav-link button-55 is-normal"
    style="
-     backdrop-filter: blur(6px);      /* 毛玻璃（需在半透明背景上）*/
+     backdrop-filter: blur(6px);     
      -webkit-backdrop-filter: blur(6px);
 
-     /* 半透明炫彩渐变背景（静态基底） */
      background: linear-gradient(
        135deg,
        rgba(255, 0, 150, 0.22),
@@ -682,7 +680,7 @@
        rgba(0, 255, 170, 0.22),
        rgba(255, 230, 0, 0.22)
      );
-     background-size: 200% 200%;     /* 让背景可平滑移动 */
+     background-size: 200% 200%;     
      animation: glowShift 5s ease-in-out infinite;
    "
 >
@@ -690,12 +688,9 @@
 </a>
 
 <style>
-/* 仅作用于你的这个链接元素（href=#SRA） */
 a[href="#SRA"] {
-  /* 使用与内联相同的动画名即可 */
 }
 
-/* 定义流光背景的关键帧动画 */
 @keyframes glowShift {
   0%   { background-position: 0% 50%; filter: saturate(120%); }
   50%  { background-position: 100% 50%; filter: saturate(150%); }
@@ -773,7 +768,7 @@ a[href="#SRA"] span {
     </div>
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
-        <div style="margin-bottom: 1.5rem;">  <!-- 添加了这个div来包裹图片并提供下方间距 -->
+        <div style="margin-bottom: 1.5rem;"> 
           <img id="rep" src="static/images/method/pipeline.png" style="width: 100%; max-width: 1000px; max-height:600px;">
         </div>
         <div class="content has-text-justified">
@@ -990,11 +985,7 @@ a[href="#SRA"] span {
                 <option value="olympiadbench">OlympiadBench</option>
               </select>
             </div>
-            <!-- 按钮可删掉
-            <div style="display: flex; align-items: end;">
-              <button onclick="loadData()" class="button primary" style="width: 100%;">Load Data (R)</button>
-            </div>
-            -->
+
           </div>
 
           
@@ -1016,7 +1007,6 @@ a[href="#SRA"] span {
         <!-- Main Content -->
         <div class="card">
           <div class="split-view">
-            <!-- 左侧结构化推理保持不变 -->
             <div>
               <h3 class="title is-4" style="margin-bottom: 3;">Structured Reasoning <span id="structured-id" style="font-size: 0.8rem; color: #666; font-weight: normal;"></span></h3>
               <div id="structured-content" style="padding-top: 2rem;">
@@ -1024,7 +1014,6 @@ a[href="#SRA"] span {
               </div>
             </div>
 
-            <!-- 右侧区域 -->
             <div>
               <div class="right-header">
                 <h3 class="title is-4" style="margin-bottom: 3; ">
@@ -1035,9 +1024,7 @@ a[href="#SRA"] span {
                 </button>
               </div>
               
-              <!-- 内容区域 -->
               <div id="right-content">
-                <!-- 分析工具面板 -->
                 <div id="analysis-panel" class="panel active" style="box-shadow:none;">
                   <div class="grid-3">
                     <button onclick="showMaxFlowAnalysis()" class="button success">
@@ -1057,7 +1044,6 @@ a[href="#SRA"] span {
                   <div> <p>We show how the MaxFlow method treats the reasoning process as a directed graph, then analyzes and visualizes it. You can change how many reasoning steps are kept by tuning three methods that use the step attention matrix (from structured reasoning models with 14, 16, 19, and 23 layers): MaxFlow, TopP, and TopK. This lets you see, from an LLM’s point of view, which steps matter most for the final answer.</p> <p><strong>MaxFlow:</strong> Based on the “maximum flow – minimum cut” idea. It checks how much the attention flow to the answer drops when we remove each reasoning step. A bigger drop means the step is more important.</p> <p><strong>TopK:</strong> Start from the answer node and move backward. At each step, keep the K previous steps with the highest attention (greedy). Repeat until you reach the question.</p> <p><strong>TopP:</strong> Start from the answer and move backward. Sort previous steps by attention, then keep steps until their total probability reaches P. Repeat until you reach the question. This is similar to top‑p sampling in LLMs.</p> </div>
                 </div>
 
-                <!-- 非结构化推理面板 -->
                 <div id="unstructured-panel" class="panel" style="box-shadow:none;">
                   <div id="unstructured-content" style="padding-top: 1rem;">
                     <div class="loading">Initializing...</div>
@@ -1092,16 +1078,13 @@ a[href="#SRA"] span {
               const toggleButton = document.getElementById('toggle-button');
 
               if (analysisPanel.classList.contains('active')) {
-                // 切换到非结构化推理
                 analysisPanel.classList.remove('active');
                 unstructuredPanel.classList.add('active');
                 rightTitle.textContent = 'Free-Form Reasoning';
                 toggleButton.textContent = 'Analyse';
-                // 重置分析工具状态
                 document.getElementById('analysis-params').classList.add('hidden');
                 document.getElementById('analysis-results').innerHTML = '';
               } else {
-                // 切换到分析工具
                 unstructuredPanel.classList.remove('active');
                 analysisPanel.classList.add('active');
                 rightTitle.textContent = 'Analysis Tools';
@@ -1230,7 +1213,6 @@ a[href="#SRA"] span {
           const benchSel = document.getElementById('benchmark');
 
           const onChange = () => {
-            // 可选：避免多次快速触发，做个简单防抖
             if (onChange._t) clearTimeout(onChange._t);
             onChange._t = setTimeout(() => {
               loadData();
@@ -1240,7 +1222,6 @@ a[href="#SRA"] span {
           modelSel.addEventListener('change', onChange);
           benchSel.addEventListener('change', onChange);
 
-          // 页面首次加载时自动加载一次
           loadData();
         });
 
@@ -1250,7 +1231,7 @@ a[href="#SRA"] span {
         function ensurePyodideReady() {
           if (pyReady) return Promise.resolve();
           if (!pyReadyPromise) {
-            pyReadyPromise = initPyodide() // 你现有的加载函数
+            pyReadyPromise = initPyodide()
               .then(() => { pyReady = true; })
               .catch(e => {
                 pyReadyPromise = null;
@@ -1303,20 +1284,16 @@ a[href="#SRA"] span {
             const pattern = /<(\w+)>(.*?)(?=<\w+>|$)/gs;
             const matches = [...problem.reasoning.matchAll(pattern)];
             
-            // 为每个标签类型维护一个计数器
             const tagCounters = {};
             
             return problem.step_attention_steps.map(step => {
               const tagName = step.step_tag;
               
-              // 初始化或递增计数器
               tagCounters[tagName] = (tagCounters[tagName] || 0);
               
-              // 找到该标签的第N次出现
               const matchingSteps = matches.filter(match => match[1] === tagName);
               const matchingStep = matchingSteps[tagCounters[tagName]];
               
-              // 递增计数器为下次使用做准备
               tagCounters[tagName]++;
               
               let content = matchingStep ? matchingStep[2].trim() : '';
@@ -1397,15 +1374,12 @@ a[href="#SRA"] span {
 
         // Find matching free-form reasoning
         function findMatchingProblem(problemText) {
-          // 找到所有匹配的问题
           const matches = currentState.unstructuredData.filter(item => item.problem === problemText);
           
-          // 如果没有匹配项，返回null
           if (matches.length === 0) {
             return null;
           }
           
-          // 从匹配项中随机选择一个
           const randomIndex = Math.floor(Math.random() * matches.length);
           return matches[randomIndex];
         }
@@ -1428,7 +1402,6 @@ a[href="#SRA"] span {
 
 // Analysis functions
 async function showMaxFlowAnalysis() {
-  // 更新输入区域，移除Run Analysis按钮，添加实时更新
   document.getElementById('analysis-params').innerHTML = `
     <div class="param-input">
       <label>Number of nodes to remove:</label>
@@ -1436,7 +1409,6 @@ async function showMaxFlowAnalysis() {
     </div>
   `;
   document.getElementById('analysis-params').classList.remove('hidden');
-  // 初始运行一次分析
   runMaxFlowAnalysis();
 }
 
@@ -1677,7 +1649,6 @@ main()
         if (typeof raw === 'string') {
           resultData = JSON.parse(raw.trim());
         } else {
-          // 少数情况下 pyodide 可能直接返回对象
           resultData = raw;
         }
       } catch (e) {
@@ -1690,7 +1661,6 @@ main()
         throw e;
       }
 
-      // 如果 Python 端返回了错误信息，展示出来
       if (resultData && resultData.error) {
         document.getElementById('analysis-results').innerHTML = `
           <div style="color:#c00; white-space:pre-wrap;">Error:
@@ -1699,7 +1669,6 @@ main()
       ${resultData.trace || ''}</div>
         `;
       } else {
-        // 正常渲染
         document.getElementById('analysis-results').innerHTML = `
           <div class="visualization-results" style="margin-top: 10px; padding: 10px;">
             <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
