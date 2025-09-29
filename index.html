@@ -1457,18 +1457,15 @@ def safe_float(x):
         return None
 
 def create_visualizations(matrix, steps, kept_nodes):
-    # 收敛：确保 kept_nodes 合法、去重、排序，并限制在范围内
     n_steps = len(steps)
     kept_nodes = sorted({int(i) for i in kept_nodes if isinstance(i, (int, np.integer)) and 0 <= int(i) < n_steps})
 
     fig = plt.figure(figsize=(16, 6))
 
-    # 左：完整热力图（保持你原来的对比视角）
     ax1 = plt.subplot(121)
     try:
         im = ax1.imshow(matrix, cmap='Blues')
     except Exception:
-        # 回退：如果 matrix 不是规整二维，尝试用 object -> float 转换生成二维数组
         m = np.array(matrix, dtype=object)
         rows = len(m)
         cols = len(m[0]) if rows>0 and hasattr(m[0], '__len__') else rows
@@ -1486,7 +1483,6 @@ def create_visualizations(matrix, steps, kept_nodes):
     plt.colorbar(im, ax=ax1, label='Attention Weight')
     ax1.set_title('Step Attention Matrix (Full)', color='#2c3e50', pad=12)
 
-    # 右：仅保留节点的子图
     ax2 = plt.subplot(122)
     if len(kept_nodes) == 0:
         ax2.text(0.5, 0.5, 'No nodes to display', ha='center', va='center')
@@ -1499,13 +1495,10 @@ def create_visualizations(matrix, steps, kept_nodes):
     G = nx.DiGraph()
     idx_map = {orig: k for k, orig in enumerate(kept_nodes)}
 
-    # 添加节点
     for orig in kept_nodes:
         tag = steps[orig]['step_tag'] if 0 <= orig < len(steps) else f'node_{orig}'
         G.add_node(idx_map[orig], label=tag, orig=orig)
 
-    # 添加边：只在 kept_nodes 间
-    # 将 matrix 安全地当作二维索引结构访问
     try:
         n = len(matrix)
         for i in kept_nodes:
@@ -1518,7 +1511,6 @@ def create_visualizations(matrix, steps, kept_nodes):
                 if w is not None and w > 0:
                     G.add_edge(idx_map[i], idx_map[j], weight=w)
     except Exception:
-        # 回退：将 matrix 转为对象数组再读
         m = np.array(matrix, dtype=object)
         for i in kept_nodes:
             for j in kept_nodes:
@@ -1526,7 +1518,6 @@ def create_visualizations(matrix, steps, kept_nodes):
                 if w is not None and w > 0:
                     G.add_edge(idx_map[i], idx_map[j], weight=w)
 
-    # 固定随机种子，限制迭代避免卡住
     pos = nx.spring_layout(G, seed=42, k=None, iterations=50)
 
     nx.draw_networkx_nodes(G, pos, node_color='#3498db', node_size=900, alpha=0.8, ax=ax2)
@@ -1557,7 +1548,6 @@ def select_steps_by_max_flow(step_attention_matrix, remove_n=0):
         sorted_nodes = [(i, 0.0) for i in kept_nodes]
         return kept_nodes, sorted_nodes
 
-    # 将矩阵尽量转为 float 权重；失败则以 0 处理
     m = np.array(step_attention_matrix, dtype=object)
     size = len(m)
     G = nx.DiGraph()
@@ -1588,7 +1578,6 @@ def select_steps_by_max_flow(step_attention_matrix, remove_n=0):
         except Exception:
             node_importance[node] = float(original_max_flow)
 
-    # 归一化（避免除0）
     interior_idx = [i for i in range(1, size-2)] if size-2 > 1 else []
     denom = max([node_importance[i] for i in interior_idx], default=1.0)
     denom = max(denom, 1e-12)
@@ -1609,7 +1598,6 @@ def main():
         steps = ${JSON.stringify(steps)}
         removeN = int(${Number.isFinite(removeN) ? removeN : 0})
 
-        # 保持原始矩阵，但在需要时转为 object 访问
         try:
             mat_np = np.array(matrix, dtype=float)
             if mat_np.ndim != 2:
@@ -1618,7 +1606,6 @@ def main():
             mat_np = np.array(matrix, dtype=object)
 
         kept_nodes, sorted_nodes = select_steps_by_max_flow(mat_np, removeN)
-        # 再次裁剪，避免越界
         kept_nodes = [i for i in kept_nodes if 0 <= int(i) < len(steps)]
         kept_steps = [steps[i]['step_tag'] for i in kept_nodes]
 
