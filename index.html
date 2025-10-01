@@ -1379,8 +1379,6 @@ a[href="#SRA"] span {
             }).join('');
           }
 
-
-
           // Display unstructured content with collapsible reasoning
           if (unstructured) {
             const reasoningContent = unstructured.reasoning ? 
@@ -1760,13 +1758,13 @@ main()
             }
             
             const isKept = kept_nodes && kept_nodes.includes(idx+1);
-            
+            const divClass = isKept ? 'collapsible expanded' : 'collapsible';
             const colorStyle = isKept 
-              ? 'background: #eafaf1; border-left: 4px solid #2ecc40;'   // 绿色
-              : 'background: #f6f6f6; border-left: 4px solid #bbb;';     // 灰色
+              ? 'background: #eafaf1; border-left: 4px solid #2ecc40;'   
+              : 'background: #f6f6f6; border-left: 4px solid #bbb;';   
 
             return `
-              <div class="collapsible expanded" onclick="toggleCollapsible(this)" style="${colorStyle}">
+              <div class="${divClass}" onclick="toggleCollapsible(this)" style="${colorStyle}">
                 <div class="collapsible-header">
                   <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
                   <span class="collapsible-toggle">▼</span>
@@ -1779,11 +1777,13 @@ main()
           }).join('');
         }
         
-        const problem = currentState.structuredData[currentState.currentIndex];
+          const problem = currentState.structuredData[currentState.currentIndex];
           if (!problem) {
               console.error("Invalid problem index");
               return;
           }
+          
+          const unstructured = findMatchingProblem(problem.problem);
           
           document.getElementById('structured-content').innerHTML = `
             <div class="step-box">
@@ -1806,7 +1806,7 @@ main()
               ${parseAndDisplaySteps(problem)}
             </div>
           `;
-
+          
           function parseAndDisplaySteps(problem) {
             if (!problem.reasoning) return '';
             
@@ -1845,6 +1845,56 @@ main()
             }).join('');
           }
 
+          // Display unstructured content with collapsible reasoning
+          if (unstructured) {
+            const reasoningContent = unstructured.reasoning ? 
+              `<div class="collapsible expanded" onclick="toggleCollapsible(this)">
+                <div class="collapsible-header">
+                  <strong>Reasoning Process</strong>
+                  <span class="collapsible-toggle">▼</span>
+                </div>
+                <div class="collapsible-uns">
+                  <div class="collapsible-body">${unstructured.reasoning}</div>
+                </div>
+              </div>` :
+              `<div class="step-box">
+                <strong>Reasoning Process:</strong><br>No reasoning content available
+              </div>`;
+
+            document.getElementById('unstructured-content').innerHTML = `
+              <div class="step-box">
+                <strong>Problem:</strong><br>${unstructured.problem}
+              </div>
+              <div class="step-box ${unstructured.correct ? unstructured.tokens === 1 ? 'incorrect' : 'correct' : 'incorrect'}">
+                Predicted Answer :
+                <div class="status-indicator ${unstructured.correct ? unstructured.tokens === 1 ? 'incorrect' : 'correct' : 'incorrect'}">
+                  ${unstructured.correct ? unstructured.tokens === 1 ? 'Incorrect' : 'Correct' : 'Incorrect'}
+                </div>
+                <br>
+                <div class="truncate-text">${unstructured.prediction}</div>
+              </div>
+              <style>
+              .truncate-text {
+                max-width: 100%;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 40ch;  
+              }
+            </style>
+              <div class="step-box">
+                <strong>Token Usage:</strong><br>
+                ${unstructured.tokens === 1 ? 
+                  '<span style="color: #e74c3c;"> > 8192: Out of Maximum Length</span>' : 
+                  unstructured.tokens}
+              </div>
+              ${reasoningContent}
+            `;
+          } else {
+            document.getElementById('unstructured-content').innerHTML = `
+              <div class="step-box">No matching free-form reasoning found</div>
+            `;
+          }
       }
         
     } catch (error) {
@@ -2118,13 +2168,13 @@ ${resultData.trace || ''}</div>
             }
             
             const isKept = kept_nodes && kept_nodes.includes(idx+1);
-            
+            const divClass = isKept ? 'collapsible expanded' : 'collapsible';
             const colorStyle = isKept 
-              ? 'background: #eafaf1; border-left: 4px solid #2ecc40;'   // 绿色
-              : 'background: #f6f6f6; border-left: 4px solid #bbb;';     // 灰色
+              ? 'background: #eafaf1; border-left: 4px solid #2ecc40;'   
+              : 'background: #f6f6f6; border-left: 4px solid #bbb;';    
 
             return `
-              <div class="collapsible expanded" onclick="toggleCollapsible(this)" style="${colorStyle}">
+              <div class="${divClass}" onclick="toggleCollapsible(this)" style="${colorStyle}">
                 <div class="collapsible-header">
                   <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
                   <span class="collapsible-toggle">▼</span>
@@ -2415,13 +2465,13 @@ const problem_ = currentState.structuredData[currentState.currentIndex];
             }
             
             const isKept = kept_nodes && kept_nodes.includes(idx+1);
-            
+            const divClass = isKept ? 'collapsible expanded' : 'collapsible';
             const colorStyle = isKept 
-              ? 'background: #eafaf1; border-left: 4px solid #2ecc40;'   // 绿色
-              : 'background: #f6f6f6; border-left: 4px solid #bbb;';     // 灰色
+              ? 'background: #eafaf1; border-left: 4px solid #2ecc40;'  
+              : 'background: #f6f6f6; border-left: 4px solid #bbb;';   
 
             return `
-              <div class="collapsible expanded" onclick="toggleCollapsible(this)" style="${colorStyle}">
+              <div class="${divClass}" onclick="toggleCollapsible(this)" style="${colorStyle}">
                 <div class="collapsible-header">
                   <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
                   <span class="collapsible-toggle">▼</span>
