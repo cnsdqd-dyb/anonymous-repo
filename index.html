@@ -1001,11 +1001,9 @@ a[href="#SRA"] span {
               Next (→)
             </button>
           </div>
-      </div>
 
         <!-- Main Content -->
-        <div class="card">
-          <div class="split-view">
+          <div class="split-view" style="padding-top: 2rem;">
             <div>
               <h3 class="title is-4" style="margin-bottom: 3;">Structured Reasoning <span id="structured-id" style="font-size: 0.8rem; color: #666; font-weight: normal;"></span></h3>
               <div id="structured-content" style="padding-top: 2rem;">
@@ -1039,8 +1037,8 @@ a[href="#SRA"] span {
                   <div id="analysis-params" class="analysis-params hidden">
                     <!-- Dynamic parameter input area -->
                   </div>
-                  <div id="analysis-results"></div>
                   <div> <p>We show how the MaxFlow method treats the reasoning process as a directed graph, then analyzes and visualizes it. You can change how many reasoning steps are kept by tuning three methods that use the step attention matrix (from structured reasoning models with 14, 16, 19, and 23 layers): MaxFlow, TopP, and TopK. This lets you see, from an LLM’s point of view, which steps matter most for the final answer.</p> <p><strong>MaxFlow:</strong> Based on the “maximum flow – minimum cut” idea. It checks how much the attention flow to the answer drops when we remove each reasoning step. A bigger drop means the step is more important.</p> <p><strong>TopK:</strong> Start from the answer node and move backward. At each step, keep the K previous steps with the highest attention (greedy). Repeat until you reach the question.</p> <p><strong>TopP:</strong> Start from the answer and move backward. Sort previous steps by attention, then keep steps until their total probability reaches P. Repeat until you reach the question. This is similar to top‑p sampling in LLMs.</p> </div>
+                  <div id="analysis-results"></div>
                 </div>
 
                 <div id="unstructured-panel" class="panel" style="box-shadow:none;">
@@ -1144,6 +1142,72 @@ a[href="#SRA"] span {
               </div>
             `;
           }
+          const problem = currentState.structuredData[currentState.currentIndex];
+          if (!problem) {
+              console.error("Invalid problem index");
+              return;
+          }
+          
+          document.getElementById('structured-content').innerHTML = `
+            <div class="step-box">
+              <strong>Problem:</strong><br>${problem.problem}
+            </div>
+            <div class="step-box ${problem.correct ? problem.tokens === 1 ? 'incorrect' : 'correct' : 'incorrect'}">
+              Predicted Answer : 
+              <div class="status-indicator ${problem.correct ? problem.tokens === 1 ? 'incorrect' : 'correct' : 'incorrect'}">
+                ${problem.correct ? 'Correct' : 'Incorrect'}
+              </div>
+              <br>${problem.prediction}
+            </div>
+            <div class="step-box">
+              <strong>Token Usage:</strong><br>
+              ${problem.tokens === 1 ? 
+                '<span style="color: #e74c3c;"> > 8192: Out of Maximum Length</span>' : 
+                problem.tokens}
+            </div>
+            <div id="steps">
+              ${parseAndDisplaySteps(problem)}
+            </div>
+          `;
+
+          function parseAndDisplaySteps(problem) {
+            if (!problem.reasoning) return '';
+            
+            const pattern = /<(\w+)>(.*?)(?=<\w+>|$)/gs;
+            const matches = [...problem.reasoning.matchAll(pattern)];
+            
+            const tagCounters = {};
+            
+            return problem.step_attention_steps.map(step => {
+              const tagName = step.step_tag;
+              
+              tagCounters[tagName] = (tagCounters[tagName] || 0);
+              
+              const matchingSteps = matches.filter(match => match[1] === tagName);
+              const matchingStep = matchingSteps[tagCounters[tagName]];
+              
+              tagCounters[tagName]++;
+              
+              let content = matchingStep ? matchingStep[2].trim() : '';
+              
+              if (step.step_tag.toLowerCase() === 'answer') {
+                content = problem.prediction;
+              }
+              
+              return `
+                <div class="collapsible expanded" onclick="toggleCollapsible(this)">
+                  <div class="collapsible-header">
+                    <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
+                    <span class="collapsible-toggle">▼</span>
+                  </div>
+                  <div class="collapsible-content">
+                    <div class="collapsible-body">${content || 'No content available'}</div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+
         }
 
         // Load data
@@ -1404,7 +1468,7 @@ async function showMaxFlowAnalysis() {
   document.getElementById('analysis-params').innerHTML = `
     <div class="param-input">
       <label>Number of nodes to remove:</label>
-      <input type="number" id="remove-n" value="0" min="0" oninput="runMaxFlowAnalysis()">
+      <input type="number" id="remove-n" value="2" min="0" oninput="runMaxFlowAnalysis()">
     </div>
   `;
   document.getElementById('analysis-params').classList.remove('hidden');
@@ -1619,7 +1683,8 @@ def main():
         result = {
             "image": image_base64,
             "ranking": "Node importance:\\n" + "\\n".join(importance_list),
-            "kept_steps": kept_steps
+            "kept_steps": kept_steps,
+            "kept_nodes": kept_nodes
         }
         return json.dumps(result)
     except Exception as e:
@@ -1655,13 +1720,131 @@ main()
       ${resultData.trace || ''}</div>
         `;
       } else {
+        const problem_ = currentState.structuredData[currentState.currentIndex];
         document.getElementById('analysis-results').innerHTML = `
           <div class="visualization-results" style="margin-top: 10px; padding: 10px;">
             <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
             <img src="data:image/png;base64,${resultData.image}" alt="Max-Flow Analysis Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
-            ${Array.isArray(resultData.kept_steps) ? `<div style="margin-top:8px; color:#2c3e50;">Keep Steps: ${resultData.kept_steps.join(' , ')}</div>` : ''}
           </div>
+            <div id="steps">
+              ${parseAndDisplayKeepSteps(problem_, resultData.kept_nodes)}
+            </div>
         `;
+        function parseAndDisplayKeepSteps(problem, kept_nodes) {
+          if (!problem.reasoning) return '';
+
+          const pattern = /<(\w+)>(.*?)(?=<\w+>|$)/gs;
+          const matches = [...problem.reasoning.matchAll(pattern)];
+
+          const tagCounters = {};
+
+          const stepTagToNode = {};
+          problem.step_attention_steps.forEach((step, idx) => {
+            stepTagToNode[step.step_tag] = idx;
+          });
+
+          return problem.step_attention_steps.map((step, idx) => {
+            const tagName = step.step_tag;
+
+            tagCounters[tagName] = (tagCounters[tagName] || 0);
+
+            const matchingSteps = matches.filter(match => match[1] === tagName);
+            const matchingStep = matchingSteps[tagCounters[tagName]];
+
+            tagCounters[tagName]++;
+
+            let content = matchingStep ? matchingStep[2].trim() : '';
+
+            if (step.step_tag.toLowerCase() === 'answer') {
+              content = problem.prediction;
+            }
+            
+            const isKept = kept_nodes && kept_nodes.includes(idx+1);
+            
+            const colorStyle = isKept 
+              ? 'background: #eafaf1; border-left: 4px solid #2ecc40;'   // 绿色
+              : 'background: #f6f6f6; border-left: 4px solid #bbb;';     // 灰色
+
+            return `
+              <div class="collapsible expanded" onclick="toggleCollapsible(this)" style="${colorStyle}">
+                <div class="collapsible-header">
+                  <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
+                  <span class="collapsible-toggle">▼</span>
+                </div>
+                <div class="collapsible-content">
+                  <div class="collapsible-body">${content || 'No content available'}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+        
+        const problem = currentState.structuredData[currentState.currentIndex];
+          if (!problem) {
+              console.error("Invalid problem index");
+              return;
+          }
+          
+          document.getElementById('structured-content').innerHTML = `
+            <div class="step-box">
+              <strong>Problem:</strong><br>${problem.problem}
+            </div>
+            <div class="step-box ${problem.correct ? problem.tokens === 1 ? 'incorrect' : 'correct' : 'incorrect'}">
+              Predicted Answer : 
+              <div class="status-indicator ${problem.correct ? problem.tokens === 1 ? 'incorrect' : 'correct' : 'incorrect'}">
+                ${problem.correct ? 'Correct' : 'Incorrect'}
+              </div>
+              <br>${problem.prediction}
+            </div>
+            <div class="step-box">
+              <strong>Token Usage:</strong><br>
+              ${problem.tokens === 1 ? 
+                '<span style="color: #e74c3c;"> > 8192: Out of Maximum Length</span>' : 
+                problem.tokens}
+            </div>
+            <div id="steps">
+              ${parseAndDisplaySteps(problem)}
+            </div>
+          `;
+
+          function parseAndDisplaySteps(problem) {
+            if (!problem.reasoning) return '';
+            
+            const pattern = /<(\w+)>(.*?)(?=<\w+>|$)/gs;
+            const matches = [...problem.reasoning.matchAll(pattern)];
+            
+            const tagCounters = {};
+            
+            return problem.step_attention_steps.map(step => {
+              const tagName = step.step_tag;
+              
+              tagCounters[tagName] = (tagCounters[tagName] || 0);
+              
+              const matchingSteps = matches.filter(match => match[1] === tagName);
+              const matchingStep = matchingSteps[tagCounters[tagName]];
+              
+              tagCounters[tagName]++;
+              
+              let content = matchingStep ? matchingStep[2].trim() : '';
+              
+              if (step.step_tag.toLowerCase() === 'answer') {
+                content = problem.prediction;
+              }
+              
+              return `
+                <div class="collapsible expanded" onclick="toggleCollapsible(this)">
+                  <div class="collapsible-header">
+                    <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
+                    <span class="collapsible-toggle">▼</span>
+                  </div>
+                  <div class="collapsible-content">
+                    <div class="collapsible-body">${content || 'No content available'}</div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+
       }
         
     } catch (error) {
@@ -1678,7 +1861,7 @@ function showTopKAnalysis() {
   document.getElementById('analysis-params').innerHTML = `
     <div class="param-input">
       <label>K value:</label>
-      <input type="number" id="top-k" value="2" min="1" oninput="runTopKAnalysis()">
+      <input type="number" id="top-k" value="1" min="1" oninput="runTopKAnalysis()">
     </div>
   `;
   document.getElementById('analysis-params').classList.remove('hidden');
@@ -1843,12 +2026,24 @@ def main():
         selected = select_steps_topk(matrix, k)
         kept_nodes = [i for i in selected if 0 <= int(i) < len(steps)]
         kept_steps = [steps[i]['step_tag'] for i in kept_nodes]
-
+        
         image_base64 = create_visualizations(matrix, steps, kept_nodes)
+        
+        def to_python_type(x):
+            if isinstance(x, (np.integer, np.intc, np.int_)):
+                return int(x)
+            elif isinstance(x, (np.floating, np.float32, np.float64)):
+                return float(x)
+            else:
+                return x
+
+
+        kept_nodes = [to_python_type(x) for x in kept_nodes]
 
         result = {
             "image": image_base64,
-            "kept_steps": kept_steps
+            "kept_steps": kept_steps,
+            "kept_nodes": kept_nodes
         }
         return json.dumps(result)
     except Exception as e:
@@ -1882,14 +2077,67 @@ ${resultData.error}
 ${resultData.trace || ''}</div>
   `;
 } else {
-  document.getElementById('analysis-results').innerHTML = `
-    <div class="visualization-results" style="margin-top: 10px; padding: 10px;">
-      <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
-      <img src="data:image/png;base64,${resultData.image}" alt="Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
-      ${Array.isArray(resultData.kept_steps) ? `<div style="margin-top:8px; color:#2c3e50;">Keep Steps：${resultData.kept_steps.join(' , ')}</div>` : ''}
-    </div>
-  `;
-}
+        const problem_ = currentState.structuredData[currentState.currentIndex];
+        document.getElementById('analysis-results').innerHTML = `
+          <div class="visualization-results" style="margin-top: 10px; padding: 10px;">
+            <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
+            <img src="data:image/png;base64,${resultData.image}" alt="Max-Flow Analysis Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
+          </div>
+
+            <div id="steps">
+              ${parseAndDisplayKeepSteps(problem_, resultData.kept_nodes)}
+            </div>
+        `;
+        function parseAndDisplayKeepSteps(problem, kept_nodes) {
+          if (!problem.reasoning) return '';
+
+          const pattern = /<(\w+)>(.*?)(?=<\w+>|$)/gs;
+          const matches = [...problem.reasoning.matchAll(pattern)];
+
+          const tagCounters = {};
+
+          const stepTagToNode = {};
+          problem.step_attention_steps.forEach((step, idx) => {
+            stepTagToNode[step.step_tag] = idx;
+          });
+
+          return problem.step_attention_steps.map((step, idx) => {
+            const tagName = step.step_tag;
+
+            tagCounters[tagName] = (tagCounters[tagName] || 0);
+
+            const matchingSteps = matches.filter(match => match[1] === tagName);
+            const matchingStep = matchingSteps[tagCounters[tagName]];
+
+            tagCounters[tagName]++;
+
+            let content = matchingStep ? matchingStep[2].trim() : '';
+
+            if (step.step_tag.toLowerCase() === 'answer') {
+              content = problem.prediction;
+            }
+            
+            const isKept = kept_nodes && kept_nodes.includes(idx+1);
+            
+            const colorStyle = isKept 
+              ? 'background: #eafaf1; border-left: 4px solid #2ecc40;'   // 绿色
+              : 'background: #f6f6f6; border-left: 4px solid #bbb;';     // 灰色
+
+            return `
+              <div class="collapsible expanded" onclick="toggleCollapsible(this)" style="${colorStyle}">
+                <div class="collapsible-header">
+                  <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
+                  <span class="collapsible-toggle">▼</span>
+                </div>
+                <div class="collapsible-content">
+                  <div class="collapsible-body">${content || 'No content available'}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+        
           } catch (error) {
               console.error("Analysis failed:", error);
               document.getElementById('analysis-results').innerHTML = `
@@ -1904,7 +2152,7 @@ function showTopPAnalysis() {
   document.getElementById('analysis-params').innerHTML = `
     <div class="param-input">
       <label>P value (0-1):</label>
-      <input type="number" id="top-p" value="0.9" min="0" max="1" step="0.1" oninput="runTopPAnalysis()">
+      <input type="number" id="top-p" value="0.1" min="0" max="1" step="0.1" oninput="runTopPAnalysis()">
     </div>
   `;
   document.getElementById('analysis-params').classList.remove('hidden');
@@ -2079,10 +2327,20 @@ def main():
         kept_steps = [steps[i]['step_tag'] for i in kept_nodes]
 
         image_base64 = create_visualizations(matrix, steps, kept_nodes)
+        def to_python_type(x):
+            if isinstance(x, (np.integer, np.intc, np.int_)):
+                return int(x)
+            elif isinstance(x, (np.floating, np.float32, np.float64)):
+                return float(x)
+            else:
+                return x
+
+        kept_nodes = [to_python_type(x) for x in kept_nodes]
 
         result = {
             "image": image_base64,
-            "kept_steps": kept_steps
+            "kept_steps": kept_steps,
+            "kept_nodes": kept_nodes
         }
         return json.dumps(result)
     except Exception as e:
@@ -2116,14 +2374,66 @@ ${resultData.error}
 ${resultData.trace || ''}</div>
   `;
 } else {
-  document.getElementById('analysis-results').innerHTML = `
-    <div class="visualization-results" style="margin-top: 10px; padding: 10px;">
-      <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
-      <img src="data:image/png;base64,${resultData.image}" alt="Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
-      ${Array.isArray(resultData.kept_steps) ? `<div style="margin-top:8px; color:#2c3e50;">Keep Steps：${resultData.kept_steps.join(' , ')}</div>` : ''}
-    </div>
-  `;
-}
+const problem_ = currentState.structuredData[currentState.currentIndex];
+        document.getElementById('analysis-results').innerHTML = `
+          <div class="visualization-results" style="margin-top: 10px; padding: 10px;">
+            <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
+            <img src="data:image/png;base64,${resultData.image}" alt="Max-Flow Analysis Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
+          </div>
+
+            <div id="steps">
+              ${parseAndDisplayKeepSteps(problem_, resultData.kept_nodes)}
+            </div>
+        `;
+        function parseAndDisplayKeepSteps(problem, kept_nodes) {
+          if (!problem.reasoning) return '';
+
+          const pattern = /<(\w+)>(.*?)(?=<\w+>|$)/gs;
+          const matches = [...problem.reasoning.matchAll(pattern)];
+
+          const tagCounters = {};
+
+          const stepTagToNode = {};
+          problem.step_attention_steps.forEach((step, idx) => {
+            stepTagToNode[step.step_tag] = idx;
+          });
+
+          return problem.step_attention_steps.map((step, idx) => {
+            const tagName = step.step_tag;
+
+            tagCounters[tagName] = (tagCounters[tagName] || 0);
+
+            const matchingSteps = matches.filter(match => match[1] === tagName);
+            const matchingStep = matchingSteps[tagCounters[tagName]];
+
+            tagCounters[tagName]++;
+
+            let content = matchingStep ? matchingStep[2].trim() : '';
+
+            if (step.step_tag.toLowerCase() === 'answer') {
+              content = problem.prediction;
+            }
+            
+            const isKept = kept_nodes && kept_nodes.includes(idx+1);
+            
+            const colorStyle = isKept 
+              ? 'background: #eafaf1; border-left: 4px solid #2ecc40;'   // 绿色
+              : 'background: #f6f6f6; border-left: 4px solid #bbb;';     // 灰色
+
+            return `
+              <div class="collapsible expanded" onclick="toggleCollapsible(this)" style="${colorStyle}">
+                <div class="collapsible-header">
+                  <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
+                  <span class="collapsible-toggle">▼</span>
+                </div>
+                <div class="collapsible-content">
+                  <div class="collapsible-body">${content || 'No content available'}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
             } catch (error) {
                 console.error("Analysis failed:", error);
                 document.getElementById('analysis-results').innerHTML = `
