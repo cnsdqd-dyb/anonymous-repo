@@ -488,7 +488,7 @@
     }
     
     .collapsible.expanded .collapsible-toggle {
-      transform: rotate(180deg);
+      transform: rotate(90deg);
     }
     
     .collapsible-content{
@@ -1198,7 +1198,7 @@ a[href="#SRA"] span {
                 <div class="collapsible expanded" onclick="toggleCollapsible(this)">
                   <div class="collapsible-header">
                     <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
-                    <span class="collapsible-toggle">▼</span>
+                    <span class="collapsible-toggle">▶</span>
                   </div>
                   <div class="collapsible-content">
                     <div class="collapsible-body">${content || 'No content available'}</div>
@@ -1369,7 +1369,7 @@ a[href="#SRA"] span {
                 <div class="collapsible expanded" onclick="toggleCollapsible(this)">
                   <div class="collapsible-header">
                     <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
-                    <span class="collapsible-toggle">▼</span>
+                    <span class="collapsible-toggle">▶</span>
                   </div>
                   <div class="collapsible-content">
                     <div class="collapsible-body">${content || 'No content available'}</div>
@@ -1385,7 +1385,7 @@ a[href="#SRA"] span {
               `<div class="collapsible expanded" onclick="toggleCollapsible(this)">
                 <div class="collapsible-header">
                   <strong>Reasoning Process</strong>
-                  <span class="collapsible-toggle">▼</span>
+                  <span class="collapsible-toggle">▶</span>
                 </div>
                 <div class="collapsible-uns">
                   <div class="collapsible-body">${unstructured.reasoning}</div>
@@ -1724,6 +1724,15 @@ main()
             <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
             <img src="data:image/png;base64,${resultData.image}" alt="Max-Flow Analysis Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
           </div>
+            <div class="collapsible" onclick="toggleCollapsible(this)" style="background: #eafaf1; border-left: 4px solid #2ecc40;">
+                <div class="collapsible-header">
+                  <strong>Problem:</strong>
+                  <span class="collapsible-toggle">▶</span>
+                </div>
+                <div class="collapsible-content">
+                  <div class="collapsible-body">${problem_.problem || 'No content available'}</div>
+                </div>
+              </div>
             <div id="steps">
               ${parseAndDisplayKeepSteps(problem_, resultData.kept_nodes)}
             </div>
@@ -1767,7 +1776,7 @@ main()
               <div class="${divClass}" onclick="toggleCollapsible(this)" style="${colorStyle}">
                 <div class="collapsible-header">
                   <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
-                  <span class="collapsible-toggle">▼</span>
+                  <span class="collapsible-toggle">▶</span>
                 </div>
                 <div class="collapsible-content">
                   <div class="collapsible-body">${content || 'No content available'}</div>
@@ -1835,7 +1844,7 @@ main()
                 <div class="collapsible expanded" onclick="toggleCollapsible(this)">
                   <div class="collapsible-header">
                     <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
-                    <span class="collapsible-toggle">▼</span>
+                    <span class="collapsible-toggle">▶</span>
                   </div>
                   <div class="collapsible-content">
                     <div class="collapsible-body">${content || 'No content available'}</div>
@@ -1851,7 +1860,7 @@ main()
               `<div class="collapsible expanded" onclick="toggleCollapsible(this)">
                 <div class="collapsible-header">
                   <strong>Reasoning Process</strong>
-                  <span class="collapsible-toggle">▼</span>
+                  <span class="collapsible-toggle">▶</span>
                 </div>
                 <div class="collapsible-uns">
                   <div class="collapsible-body">${unstructured.reasoning}</div>
@@ -2133,7 +2142,15 @@ ${resultData.trace || ''}</div>
             <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
             <img src="data:image/png;base64,${resultData.image}" alt="Max-Flow Analysis Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
           </div>
-
+              <div class="collapsible" onclick="toggleCollapsible(this)" style="background: #eafaf1; border-left: 4px solid #2ecc40;">
+                <div class="collapsible-header">
+                  <strong>Problem:</strong>
+                  <span class="collapsible-toggle">▶</span>
+                </div>
+                <div class="collapsible-content">
+                  <div class="collapsible-body">${problem_.problem || 'No content available'}</div>
+                </div>
+              </div>
             <div id="steps">
               ${parseAndDisplayKeepSteps(problem_, resultData.kept_nodes)}
             </div>
@@ -2177,7 +2194,7 @@ ${resultData.trace || ''}</div>
               <div class="${divClass}" onclick="toggleCollapsible(this)" style="${colorStyle}">
                 <div class="collapsible-header">
                   <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
-                  <span class="collapsible-toggle">▼</span>
+                  <span class="collapsible-toggle">▶</span>
                 </div>
                 <div class="collapsible-content">
                   <div class="collapsible-body">${content || 'No content available'}</div>
@@ -2430,7 +2447,15 @@ const problem_ = currentState.structuredData[currentState.currentIndex];
             <div class="plots" style="width: 100%; margin-bottom: 10px;"></div>
             <img src="data:image/png;base64,${resultData.image}" alt="Max-Flow Analysis Visualization" style="width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;">
           </div>
-
+            <div class="collapsible" onclick="toggleCollapsible(this)" style="background: #eafaf1; border-left: 4px solid #2ecc40;">
+                <div class="collapsible-header">
+                  <strong>Problem:</strong>
+                  <span class="collapsible-toggle">▶</span>
+                </div>
+                <div class="collapsible-content">
+                  <div class="collapsible-body">${problem_.problem || 'No content available'}</div>
+                </div>
+              </div>
             <div id="steps">
               ${parseAndDisplayKeepSteps(problem_, resultData.kept_nodes)}
             </div>
@@ -2474,7 +2499,7 @@ const problem_ = currentState.structuredData[currentState.currentIndex];
               <div class="${divClass}" onclick="toggleCollapsible(this)" style="${colorStyle}">
                 <div class="collapsible-header">
                   <strong>${step.step_tag.toUpperCase()} (Step ${step.step})</strong>
-                  <span class="collapsible-toggle">▼</span>
+                  <span class="collapsible-toggle">▶</span>
                 </div>
                 <div class="collapsible-content">
                   <div class="collapsible-body">${content || 'No content available'}</div>
